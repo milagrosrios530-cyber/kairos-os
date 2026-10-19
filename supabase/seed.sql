@@ -1,0 +1,3 @@
+-- Intencionalmente vacío.
+-- Producción no recibe datos ficticios. Para local/staging use seed.staging.sql
+-- de forma explícita y nunca contra la base productiva.
