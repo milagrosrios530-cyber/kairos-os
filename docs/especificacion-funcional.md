@@ -434,9 +434,11 @@ La oportunidad se marca `Ganado` cuando exista una **reserva confirmada**. Una c
 
 ## 10.3. Confirmación de reserva
 
-**Precondiciones mínimas recomendadas**: cliente válido; disponibilidad verificada en transacción; fecha/horas y aforo consistente; cotización aprobada; términos/contrato aceptados con evidencia; abono exigible registrado y **verificado** (o excepción administrativa justificada); monto y responsable claros.
+**Precondiciones mínimas recomendadas**: cliente válido; disponibilidad verificada en transacción; fecha/horas y aforo consistente; cotización aprobada; abono exigible registrado y **verificado** (o excepción administrativa justificada); monto y responsable claros. Dirección indicó que, después de verificar los S/500, se envía el contrato con todos los detalles del programa; queda pendiente decidir si su aceptación es además una condición previa para pasar a `confirmed`.
 
-Las condiciones monetarias exactas requieren aprobación de Dirección. El Tarifario V3.0 propone 30% al reservar, 40% a 30 días y 30% a 7 días; son **reglas sugeridas, no políticas vigentes automáticamente**.
+**Regla económica aprobada por Dirección el 20/10/2026:** el abono inicial para reservar es **S/500 verificados** y forma parte del total contratado. El saldo base se calcula como `total_contract_cents - 50000`; la cuota intermedia equivale al **50% del saldo base** y vence 15 días calendario antes del evento; el saldo final es el remanente después de todos los pagos verificados. Falta fijar si este último vence exactamente 1 o 2 horas antes del inicio. Esta regla define el calendario de cobro de cada contrato y **no constituye una tarifa oficial de servicios**.
+
+**Ejemplo aprobado:** para un contrato de S/15,500, el abono inicial de S/500 deja un saldo base de S/15,000; la cuota intermedia es S/7,500 y el saldo final es S/7,500. Todos los cálculos se almacenan en céntimos enteros y nunca con números de punto flotante.
 
 **Flujo:** administrador revisa documentación → clic “Confirmar reserva” → backend verifica permisos, pagos, contrato, ausencia de conflicto → transacción actualiza reserva y asignación de calendario → auditoría → se muestra confirmación → portal privado refleja nuevo estado.
 
@@ -520,7 +522,7 @@ Campos: `booking_id`, `amount_cents` (entero en céntimos), `currency=PEN`, `pai
 
 ## 12.2. Plan de pagos
 
-Es configurable por contrato/versión. Propuesta del Tarifario Maestro V3.0: 30% reserva, 40% a 30 días del evento y 30% a 7 días. Mantener la opción de importes manuales y fechas pactadas. No activarla hasta aprobación. Si la reserva es próxima, la agenda se recalcula con una regla aprobada en vez de producir cuotas con vencimiento en el pasado.
+La regla activa aprobada es: S/500 verificados como abono inicial incluido en el total; luego 50% del saldo base (`total contractual - S/500`) con vencimiento 15 días calendario antes del evento; finalmente el remanente antes del inicio del evento. El sistema debe conservar importes y fechas pactadas por versión contractual, registrar cualquier excepción con motivo y autorización, y no reinterpretar este calendario como tarifa de servicios. El plazo exacto del pago final (1 o 2 horas antes) y la política para contratos celebrados a menos de 15 días del evento siguen pendientes de aprobación; no se debe generar una cuota retroactiva ni inventar una regla automática.
 
 ## 12.3. Seguridad y trazabilidad financiera
 
@@ -1181,7 +1183,7 @@ kairos-os/
 | D-02 | ¿Cuál es el horario válido de uso / hora máxima? | Parametrizable; 8 h es solo referencia del borrador | Cotización definitiva |
 | D-03 | ¿Cuánto dura un hold? | Sugerencia 24 h, pendiente | Automatización de holds |
 | D-04 | ¿El cliente puede solicitar hold por web? | No; solo consulta pública | Portal |
-| D-05 | ¿Qué monto/documento confirma reserva? | Aprobado parcialmente: abono verificado mínimo de **S/500**, incluido en el total; debe alcanzarse **50% del total 15 días antes**. Pendiente precisar si el contrato es condición adicional y el momento exacto del saldo final | Cobros/confirmación |
+| D-05 | ¿Qué monto/documento confirma reserva? | Aprobado parcialmente: abono verificado de **S/500**, incluido en el total; saldo base = total - S/500; se paga 50% de ese saldo 15 días antes y el remanente antes del inicio. Tras verificar el abono se envía el contrato. Pendiente precisar si aceptar el contrato es condición adicional y si el pago final vence 1 o 2 horas antes | Cobros/confirmación |
 | D-06 | ¿Cuáles precios intermedios se aprueban? | Ninguno activado por defecto | Cotizaciones oficiales |
 | D-07 | ¿Cuál es el stock exacto de mesas/sillas? | Por inventariar | Validación final mobiliario |
 | D-08 | ¿Cuál es aforo legal autorizado por formato? | Sin cifra legal registrada por defecto | Promesas de aforo |
