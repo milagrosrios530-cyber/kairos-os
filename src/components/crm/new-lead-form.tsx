@@ -69,16 +69,19 @@ type NewLeadFormProps = {
 };
 
 const serviceOptions = [
-  ["mobiliario", "Mobiliario"],
-  ["decoracion", "Decoración"],
-  ["catering", "Catering"],
-  ["mozos", "Mozos"],
-  ["coordinacion", "Coordinación"],
-  ["sonido", "Sonido"],
-  ["dj", "DJ"],
-  ["audiovisual", "Foto y video"],
-  ["ceremonia", "Ceremonia"],
-  ["otro", "Otro"],
+  { value: "local", label: "Local", unit: "servicio" },
+  { value: "mobiliario", label: "Mobiliario", unit: "mesas" },
+  { value: "decoracion", label: "Decoración", unit: "servicio" },
+  { value: "mesas_decoradas", label: "Mesas decoradas", unit: "mesas" },
+  { value: "catering", label: "Catering", unit: "personas" },
+  { value: "mozos", label: "Mozos", unit: "personas" },
+  { value: "limpieza", label: "Personal de limpieza", unit: "personas" },
+  { value: "coordinacion", label: "Coordinación", unit: "servicio" },
+  { value: "sonido", label: "Sonido", unit: "servicio" },
+  { value: "dj", label: "DJ", unit: "servicio" },
+  { value: "audiovisual", label: "Fotografía y video", unit: "servicio" },
+  { value: "ceremonia", label: "Ceremonia", unit: "servicio" },
+  { value: "otro", label: "Otro", unit: "unidad" },
 ] as const;
 
 function duplicateMatchesFrom(body: ApiErrorBody): DuplicateMatch[] {
@@ -117,6 +120,7 @@ export function NewLeadForm({
   const [duplicateOverride, setDuplicateOverride] = useState(false);
   const [withTask, setWithTask] = useState(false);
   const [withVisit, setWithVisit] = useState(false);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -167,6 +171,7 @@ export function NewLeadForm({
       ),
       internalNotes: optionalText(form.get("internalNotes")),
       eventTypeId: String(form.get("eventTypeId") ?? ""),
+      eventDetail: optionalText(form.get("eventDetail")),
       desiredDate: String(form.get("desiredDate") ?? ""),
       guestsAdults: optionalInteger(form.get("guestsAdults")),
       guestsChildren: optionalInteger(form.get("guestsChildren")),
@@ -174,7 +179,19 @@ export function NewLeadForm({
       modality: String(form.get("modality") ?? "personalizado"),
       source: String(form.get("source") ?? "whatsapp"),
       sourceDetail: optionalText(form.get("sourceDetail")),
-      serviceInterests: form.getAll("serviceInterests").map(String),
+      serviceInterests: serviceOptions
+        .filter((service) => selectedServices.includes(service.value))
+        .map((service) => {
+          const quantityValue = String(
+            form.get(`serviceQuantity.${service.value}`) ?? "",
+          ).trim();
+          return {
+            label: service.label,
+            quantity: quantityValue ? Number(quantityValue) : undefined,
+            unit: optionalText(form.get(`serviceUnit.${service.value}`)),
+            details: optionalText(form.get(`serviceDetails.${service.value}`)),
+          };
+        }),
       proposedAmountCents: solesToCents(form.get("proposedAmount")),
       proposalServicesSummary: optionalText(form.get("proposalServicesSummary")),
       opportunityNotes: optionalText(form.get("opportunityNotes")),
@@ -218,6 +235,7 @@ export function NewLeadForm({
       setDuplicates([]);
       setExistingCustomerId(null);
       setDuplicateOverride(false);
+      setSelectedServices([]);
       setWithTask(false);
       setWithVisit(false);
       setNotice({
@@ -412,6 +430,20 @@ export function NewLeadForm({
             </NativeSelect>
           </FormField>
           <FormField
+            hint="Ejemplo: 50 años, promoción 2026 o aniversario de empresa."
+            label="Detalle del evento"
+            name="eventDetail"
+          >
+            <Input
+              className={controlClassName}
+              disabled={pending}
+              id="eventDetail"
+              maxLength={160}
+              name="eventDetail"
+              placeholder="50 años"
+            />
+          </FormField>
+          <FormField
             hint="Tentativa · no reserva el salón."
             label="Fecha solicitada"
             name="desiredDate"
@@ -548,17 +580,80 @@ export function NewLeadForm({
         <fieldset>
           <legend className="text-sm font-medium">Servicios de interés</legend>
           <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-            {serviceOptions.map(([value, label]) => (
+            {serviceOptions.map((service) => (
               <label
                 className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-black/[0.07] bg-[#f8f8fa] px-3 py-2 text-sm transition-colors has-[:checked]:border-[#c5a46d] has-[:checked]:bg-[#f7f0df]"
-                key={value}
+                key={service.value}
               >
-                <input className="size-4 accent-[#8b672f]" disabled={pending} name="serviceInterests" type="checkbox" value={value} />
-                {label}
+                <input
+                  checked={selectedServices.includes(service.value)}
+                  className="size-4 accent-[#8b672f]"
+                  disabled={pending}
+                  onChange={(event) =>
+                    setSelectedServices((current) =>
+                      event.target.checked
+                        ? [...current, service.value]
+                        : current.filter((value) => value !== service.value),
+                    )
+                  }
+                  type="checkbox"
+                  value={service.value}
+                />
+                {service.label}
               </label>
             ))}
           </div>
         </fieldset>
+
+        {selectedServices.length ? (
+          <div className="mt-4 space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+              Cantidad y alcance por servicio
+            </p>
+            {serviceOptions
+              .filter((service) => selectedServices.includes(service.value))
+              .map((service) => (
+                <div
+                  className="grid gap-3 rounded-2xl border border-black/[0.06] bg-[#f8f8fa] p-4 sm:grid-cols-[0.75fr_0.9fr_2fr]"
+                  key={service.value}
+                >
+                  <FormField label={`${service.label}: cantidad`} name={`serviceQuantity.${service.value}`}>
+                    <Input
+                      className={controlClassName}
+                      disabled={pending}
+                      id={`serviceQuantity.${service.value}`}
+                      max="100000"
+                      min="0.01"
+                      name={`serviceQuantity.${service.value}`}
+                      placeholder="Ej. 2"
+                      step="0.01"
+                      type="number"
+                    />
+                  </FormField>
+                  <FormField label="Unidad" name={`serviceUnit.${service.value}`}>
+                    <Input
+                      className={controlClassName}
+                      defaultValue={service.unit}
+                      disabled={pending}
+                      id={`serviceUnit.${service.value}`}
+                      maxLength={40}
+                      name={`serviceUnit.${service.value}`}
+                    />
+                  </FormField>
+                  <FormField label="Detalle" name={`serviceDetails.${service.value}`}>
+                    <Input
+                      className={controlClassName}
+                      disabled={pending}
+                      id={`serviceDetails.${service.value}`}
+                      maxLength={2000}
+                      name={`serviceDetails.${service.value}`}
+                      placeholder="Tipo, distribución o alcance conversado"
+                    />
+                  </FormField>
+                </div>
+              ))}
+          </div>
+        ) : null}
 
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <FormField

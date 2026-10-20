@@ -38,6 +38,7 @@ type OpportunityRow = {
   assigned_to: string;
   pipeline_status: string;
   desired_date: string | null;
+  occasion_detail?: string | null;
   guests_total: number | null;
   modality: string | null;
   source: string;
@@ -200,7 +201,7 @@ export async function listOpportunities(options: OpportunityQueryOptions = {}) {
   let query = supabase
     .from("opportunities")
     .select(
-      "id, opportunity_code, customer_id, event_type_id, assigned_to, pipeline_status, desired_date, guests_total, modality, source, next_action, next_action_at, notes, created_at, updated_at",
+      "id, opportunity_code, customer_id, event_type_id, assigned_to, pipeline_status, desired_date, occasion_detail, guests_total, modality, source, next_action, next_action_at, notes, created_at, updated_at",
       { count: "exact" },
     )
     .eq("organization_id", viewer.organizationId)
@@ -437,7 +438,7 @@ export async function getOpportunityDetail(opportunityId: string) {
   const opportunityResult = await supabase
     .from("opportunities")
     .select(
-      "id, opportunity_code, customer_id, event_type_id, assigned_to, pipeline_status, desired_date, guests_total, modality, source, next_action, next_action_at, notes, created_at, updated_at",
+      "id, opportunity_code, customer_id, event_type_id, assigned_to, pipeline_status, desired_date, occasion_detail, guests_total, modality, source, next_action, next_action_at, notes, created_at, updated_at",
     )
     .eq("organization_id", viewer.organizationId)
     .eq("id", opportunityId)
@@ -486,9 +487,10 @@ export async function getOpportunityDetail(opportunityId: string) {
         .limit(10),
       supabase
         .from("opportunity_service_interests")
-        .select("id, service_label, details")
+        .select("id, service_label, quantity, unit, details")
         .eq("organization_id", viewer.organizationId)
         .eq("opportunity_id", opportunityId)
+        .eq("active", true)
         .order("service_label"),
     ]);
 
@@ -522,6 +524,7 @@ export async function getOpportunityDetail(opportunityId: string) {
     code: opportunity.opportunity_code,
     stage: opportunity.pipeline_status,
     desiredDate: opportunity.desired_date,
+    occasionDetail: opportunity.occasion_detail ?? null,
     guestsTotal: opportunity.guests_total,
     modality: opportunity.modality,
     source: opportunity.source,
@@ -585,6 +588,8 @@ export async function getOpportunityDetail(opportunityId: string) {
     serviceInterests: (services.data ?? []).map((row) => ({
       id: row.id as string,
       label: row.service_label as string,
+      quantity: row.quantity as number | null,
+      unit: row.unit as string | null,
       details: row.details as string | null,
     })),
   };

@@ -16,6 +16,7 @@ import { z } from "zod";
 
 import { ActivityForm } from "@/components/crm/activity-form";
 import { OpportunityStageButton, type PipelineStage } from "@/components/crm/opportunity-stage-button";
+import { ServiceDetailsForm } from "@/components/crm/service-details-form";
 import { TaskForm } from "@/components/tasks/task-form";
 import { TaskOutcomeForm } from "@/components/tasks/task-outcome-form";
 import { Badge } from "@/components/ui/badge";
@@ -67,7 +68,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2"><p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8b672f]">{opportunity.code}</p><Badge className="border-0 bg-[#f2ead9] text-[#765522]" variant="outline">{PIPELINE_STATUS_LABELS[opportunity.stage as PipelineStatus] ?? opportunity.stage}</Badge></div>
             <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] sm:text-[40px]">{opportunity.customer?.fullName ?? "Cliente autorizado"}</h1>
-            <p className="mt-2 text-sm text-muted-foreground">{opportunity.eventType} · Asesor: {opportunity.adviserName}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{opportunity.eventType}{opportunity.occasionDetail ? ` · ${opportunity.occasionDetail}` : ""} · Asesor: {opportunity.adviserName}</p>
           </div>
           {opportunity.customer ? <div className="flex flex-wrap gap-2"><Button render={<a href={`tel:${opportunity.customer.phone}`} />} variant="outline"><Phone aria-hidden="true" /> Llamar</Button>{opportunity.customer.email ? <Button render={<a href={`mailto:${opportunity.customer.email}`} />} variant="outline"><Mail aria-hidden="true" /> Correo</Button> : null}<Button render={<Link href={`/app/clientes/${opportunity.customer.id}`} />} variant="outline"><UserRound aria-hidden="true" /> Ver cliente</Button></div> : null}
         </div>
@@ -85,12 +86,13 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-[24px] border border-black/[0.06] bg-white p-5 shadow-sm">
           <div className="flex items-center gap-2"><CircleDollarSign aria-hidden="true" className="size-5 text-[#8b672f]" /><h2 className="text-lg font-semibold">Propuestas registradas</h2></div>
-          <div className="mt-4 space-y-3">{opportunity.proposals.length ? opportunity.proposals.map((proposal) => <article className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4" key={proposal.id}><p className="text-lg font-semibold">{money(proposal.amountCents, proposal.currency)}</p><p className="mt-1 text-xs font-semibold uppercase tracking-wide text-amber-800">Propuesta referencial · no es tarifa oficial</p>{proposal.servicesSummary ? <p className="mt-3 whitespace-pre-wrap text-sm leading-6">{proposal.servicesSummary}</p> : null}<p className="mt-3 text-[11px] text-muted-foreground">{proposal.recordedByName} · {dateTime(proposal.createdAt)}</p></article>) : <p className="rounded-2xl border border-dashed border-black/10 p-6 text-sm text-muted-foreground">No se registró propuesta inicial.</p>}</div>
+          <div className="mt-4 space-y-3">{opportunity.proposals.length ? opportunity.proposals.map((proposal) => <article className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4" key={proposal.id}><p className="text-lg font-semibold">{money(proposal.amountCents, proposal.currency)}</p><p className="mt-1 text-xs font-semibold uppercase tracking-wide text-amber-800">Propuesta referencial · no es tarifa oficial</p>{proposal.servicesSummary ? <p className="mt-3 whitespace-pre-wrap text-sm leading-6">{proposal.servicesSummary}</p> : null}{proposal.notes ? <p className="mt-3 rounded-xl border border-amber-200/80 bg-white/70 p-3 text-xs leading-5 text-amber-950">{proposal.notes}</p> : null}<p className="mt-3 text-[11px] text-muted-foreground">{proposal.recordedByName} · {dateTime(proposal.createdAt)}</p></article>) : <p className="rounded-2xl border border-dashed border-black/10 p-6 text-sm text-muted-foreground">No se registró propuesta inicial.</p>}</div>
         </div>
         <div className="rounded-[24px] border border-black/[0.06] bg-white p-5 shadow-sm">
           <h2 className="text-lg font-semibold">Servicios y detalles</h2>
-          <div className="mt-4 flex flex-wrap gap-2">{opportunity.serviceInterests.length ? opportunity.serviceInterests.map((service) => <Badge key={service.id} variant="outline">{service.label}</Badge>) : <span className="text-sm text-muted-foreground">Sin servicios marcados.</span>}</div>
+          <div className="mt-4 space-y-2">{opportunity.serviceInterests.length ? opportunity.serviceInterests.map((service) => <article className="rounded-2xl border border-black/[0.06] bg-[#f8f8fa] p-3" key={service.id}><div className="flex flex-wrap items-center gap-2"><p className="text-sm font-semibold">{service.label}</p>{service.quantity !== null ? <Badge className="border-0 bg-[#f2ead9] text-[#765522]" variant="outline">{service.quantity} {service.unit ?? "unidad(es)"}</Badge> : null}</div>{service.details ? <p className="mt-2 text-xs leading-5 text-muted-foreground">{service.details}</p> : null}</article>) : <span className="text-sm text-muted-foreground">Sin servicios marcados.</span>}</div>
           {opportunity.notes ? <p className="mt-5 whitespace-pre-wrap rounded-2xl bg-[#f5f5f7] p-4 text-sm leading-6">{opportunity.notes}</p> : null}
+          <ServiceDetailsForm expectedUpdatedAt={opportunity.updatedAt} opportunityId={opportunity.id} services={opportunity.serviceInterests} />
         </div>
       </section>
 

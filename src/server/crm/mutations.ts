@@ -29,6 +29,7 @@ export type CreateCrmIntakeInput = {
   preferredContactChannel: string;
   internalNotes?: string;
   eventTypeId: string;
+  eventDetail?: string;
   desiredDate: string;
   guestsAdults?: number;
   guestsChildren?: number;
@@ -36,7 +37,12 @@ export type CreateCrmIntakeInput = {
   modality: string;
   source: string;
   sourceDetail?: string;
-  serviceInterests: string[];
+  serviceInterests: Array<{
+    label: string;
+    quantity?: number;
+    unit?: string;
+    details?: string;
+  }>;
   proposedAmountCents?: number;
   proposalServicesSummary?: string;
   opportunityNotes?: string;
@@ -106,6 +112,18 @@ export type SetVisitStatusInput = {
 export type TransitionOpportunityInput = {
   stage: string;
   reason?: string;
+  expectedUpdatedAt?: string;
+  idempotencyKey: string;
+};
+
+export type UpdateOpportunityServicesInput = {
+  services: Array<{
+    id?: string;
+    label: string;
+    quantity?: number;
+    unit?: string;
+    details?: string;
+  }>;
   expectedUpdatedAt?: string;
   idempotencyKey: string;
 };
@@ -206,7 +224,7 @@ export async function createCrmIntake(input: CreateCrmIntakeInput) {
     }
   }
 
-  const { data, error } = await supabase.rpc("create_crm_intake", {
+  const { data, error } = await supabase.rpc("create_crm_intake_v2", {
     p_full_name: input.fullName,
     p_phone_e164: input.phoneE164,
     p_customer_type: input.customerType,
@@ -233,6 +251,7 @@ export async function createCrmIntake(input: CreateCrmIntakeInput) {
       guests_adults: input.guestsAdults,
       guests_children: input.guestsChildren,
       source_detail: input.sourceDetail,
+      occasion_detail: input.eventDetail,
       notes: input.opportunityNotes,
     },
     p_alternate_dates: [],
@@ -411,6 +430,27 @@ export async function transitionOpportunity(
     p_idempotency_key: input.idempotencyKey,
   });
   if (error) mapDatabaseError(error, "No se pudo cambiar la etapa de la oportunidad.");
+  return data;
+}
+
+export async function updateOpportunityServices(
+  opportunityId: string,
+  input: UpdateOpportunityServicesInput,
+) {
+  await requirePermission("crm:create");
+  const { supabase } = await visibleOpportunity(opportunityId);
+  const { data, error } = await supabase.rpc(
+    "upsert_opportunity_service_details",
+    {
+      p_opportunity_id: opportunityId,
+      p_services: input.services,
+      p_expected_updated_at: input.expectedUpdatedAt ?? null,
+      p_idempotency_key: input.idempotencyKey,
+    },
+  );
+  if (error) {
+    mapDatabaseError(error, "No se pudieron actualizar los servicios.");
+  }
   return data;
 }
 

@@ -212,6 +212,14 @@ export const customerIntakeSchema = z
 
 const serviceOfInterestSchema = z.string().trim().min(2).max(80);
 
+export const crmServiceDetailSchema = z.strictObject({
+  id: z.string().uuid().optional(),
+  label: z.string().trim().min(2).max(120),
+  quantity: z.number().positive().max(100_000).optional(),
+  unit: optionalText(40),
+  details: optionalText(2_000),
+});
+
 export const opportunityIntakeSchema = z
   .strictObject({
     customerId: z.string().uuid(),
@@ -535,6 +543,7 @@ export const crmIntakeRequestSchema = z
     preferredContactChannel: z.enum(CONTACT_CHANNELS),
     internalNotes: optionalText(4_000),
     eventTypeId: z.string().uuid(),
+    eventDetail: optionalText(160),
     desiredDate: tentativeDateSchema,
     guestsAdults: z.number().int().nonnegative().optional(),
     guestsChildren: z.number().int().nonnegative().optional(),
@@ -542,7 +551,7 @@ export const crmIntakeRequestSchema = z
     modality: z.enum(EVENT_MODALITIES),
     source: z.enum(LEAD_SOURCES),
     sourceDetail: optionalText(160),
-    serviceInterests: z.array(serviceOfInterestSchema).max(20),
+    serviceInterests: z.array(crmServiceDetailSchema).max(30),
     proposedAmountCents: moneyCentsSchema.optional(),
     proposalServicesSummary: optionalText(2_000),
     opportunityNotes: optionalText(4_000),
@@ -610,7 +619,10 @@ export const crmIntakeRequestSchema = z
       });
     }
 
-    if (new Set(value.serviceInterests).size !== value.serviceInterests.length) {
+    const serviceLabels = value.serviceInterests.map((service) =>
+      service.label.toLocaleLowerCase("es-PE"),
+    );
+    if (new Set(serviceLabels).size !== serviceLabels.length) {
       context.addIssue({
         code: "custom",
         path: ["serviceInterests"],
@@ -628,6 +640,25 @@ export const crmIntakeRequestSchema = z
     pipelineStatus: "nuevo" as const,
   }));
 
+export const opportunityServicesUpdateSchema = z
+  .strictObject({
+    services: z.array(crmServiceDetailSchema).min(1).max(30),
+    expectedUpdatedAt: z.string().datetime({ offset: true }).optional(),
+    idempotencyKey: z.string().uuid(),
+  })
+  .superRefine((value, context) => {
+    const labels = value.services.map((service) =>
+      service.label.toLocaleLowerCase("es-PE"),
+    );
+    if (new Set(labels).size !== labels.length) {
+      context.addIssue({
+        code: "custom",
+        path: ["services"],
+        message: "No repitas servicios.",
+      });
+    }
+  });
+
 export type CustomerIntake = z.infer<typeof customerIntakeSchema>;
 export type OpportunityIntake = z.infer<typeof opportunityIntakeSchema>;
 export type CrmActivityIntake = z.infer<typeof crmActivityIntakeSchema>;
@@ -638,3 +669,7 @@ export type TaskReschedule = z.infer<typeof taskRescheduleSchema>;
 export type VisitIntake = z.infer<typeof visitIntakeSchema>;
 export type VisitTransition = z.infer<typeof visitTransitionSchema>;
 export type CrmIntakeRequest = z.infer<typeof crmIntakeRequestSchema>;
+export type CrmServiceDetail = z.infer<typeof crmServiceDetailSchema>;
+export type OpportunityServicesUpdate = z.infer<
+  typeof opportunityServicesUpdateSchema
+>;

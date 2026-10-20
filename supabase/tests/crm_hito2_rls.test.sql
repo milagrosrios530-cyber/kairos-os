@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(50);
+select plan(58);
 
 select ok(to_regclass('public.customers') is not null, 'customers exists');
 select ok(
@@ -382,6 +382,74 @@ select ok(
     'public.set_crm_visit_status(uuid,public.visit_status,text,text,timestamptz,uuid)'::regprocedure
   ) ilike '%p_expected_updated_at%',
   'state-changing RPCs implement optimistic concurrency'
+);
+
+select ok(
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'opportunity_service_interests'
+      and column_name = 'quantity'
+  ),
+  'service interests store quantity'
+);
+select ok(
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'opportunity_service_interests'
+      and column_name = 'unit'
+  ),
+  'service interests store unit'
+);
+select ok(
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'opportunities'
+      and column_name = 'occasion_detail'
+  ),
+  'opportunities store the occasion detail'
+);
+select ok(
+  exists (
+    select 1 from pg_trigger
+    where tgrelid = 'public.opportunity_service_interests'::regclass
+      and tgname = 'opportunity_service_interests_set_updated_at'
+      and not tgisinternal
+  ),
+  'service detail updates receive a server timestamp'
+);
+select ok(
+  to_regprocedure(
+    'public.upsert_opportunity_service_details(uuid,jsonb,timestamptz,uuid)'
+  ) is not null,
+  'service detail RPC exists'
+);
+select ok(
+  to_regprocedure(
+    'public.create_crm_intake_v2(text,text,public.customer_type,uuid,uuid,date,integer,public.event_modality,public.lead_source,uuid,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb,uuid)'
+  ) is not null,
+  'structured CRM intake RPC exists'
+);
+select ok(
+  not has_function_privilege(
+    'anon',
+    'public.upsert_opportunity_service_details(uuid,jsonb,timestamptz,uuid)',
+    'EXECUTE'
+  ),
+  'anonymous users cannot edit service details'
+);
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'public.upsert_opportunity_service_details(uuid,jsonb,timestamptz,uuid)',
+    'EXECUTE'
+  )
+  and pg_get_functiondef(
+    'public.upsert_opportunity_service_details(uuid,jsonb,timestamptz,uuid)'::regprocedure
+  ) ilike '%p_expected_updated_at%',
+  'authenticated service updates use a guarded concurrency-aware RPC'
 );
 
 select * from finish();

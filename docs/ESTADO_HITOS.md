@@ -59,19 +59,22 @@ Implementado el 20 de octubre de 2026:
 - clientes con búsqueda, ficha protegida, teléfono/WhatsApp, DNI enmascarado y oportunidades históricas;
 - CRM en lista móvil y Kanban de escritorio, alta transaccional, deduplicación orientativa, etapas y línea de tiempo append-only;
 - captura de evento solicitado, fecha tentativa, invitados, servicios, asesor y monto propuesto expresamente no tarifario;
+- partidas de servicio editables con cantidad, unidad y detalle, además de un detalle libre de la celebración;
 - tareas y visitas persistentes, con resultado obligatorio al completar;
 - permisos revalidados en servidor y PostgreSQL, 28 políticas RLS, auditoría, idempotencia y concurrencia optimista;
 - las tablas CRM conceden lectura bajo RLS; las escrituras autenticadas se realizan solo mediante RPCs guardadas y autorizadas.
 
-Supabase remoto: migración `crm_hito2` aplicada. El catálogo inicial contiene 11 tipos de evento de la especificación. No se cargaron clientes, oportunidades ni tarifas demo.
+Supabase remoto: migraciones `crm_hito2` y `crm_service_details` aplicadas. El catálogo inicial contiene 11 tipos de evento de la especificación. No se cargaron tarifas ni fixtures demo.
 
 Evidencia de puerta:
 
-- `pnpm lint`, `pnpm typecheck`, `pnpm test` (39/39) y `pnpm build` pasan;
-- pgTAP remoto: 50/50 controles de esquema, RLS, privilegios, append-only, auditoría y concurrencia;
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` (41/41) y `pnpm build` pasan;
+- pgTAP remoto: 58/58 controles de esquema, RLS, privilegios, append-only, auditoría y concurrencia;
 - flujo transaccional remoto: 9/9 controles para cliente → oportunidad → propuesta referencial → tarea → visita → calificación → cierres con resultado;
 - el flujo de QA se ejecutó con `ROLLBACK` y se comprobó que quedaron 0 clientes `DEMO QA`;
-- existen 11 tipos de evento activos, 28 políticas CRM y 7 RPC principales concedidas a usuarios autenticados.
+- los cambios de servicios se ejecutan mediante una RPC autorizada, idempotente, transaccional y con control de concurrencia; no se habilitó escritura directa.
+
+Actualización operativa verificada el 20 de octubre de 2026: la oportunidad real `KAI-LEAD-2026-000001` conservó su cliente y recibió siete partidas detalladas, una nueva versión append-only de la propuesta y actividades/auditoría. El saldo informado quedó expresamente separado de un pago verificado y la fecha sigue siendo tentativa.
 
 Avisos abiertos, no bloqueantes para staging:
 

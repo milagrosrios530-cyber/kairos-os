@@ -7,6 +7,7 @@ import {
   customerIntakeSchema,
   normalizePhoneE164,
   opportunityIntakeSchema,
+  opportunityServicesUpdateSchema,
   opportunityTransitionSchema,
   taskIntakeSchema,
   taskRescheduleSchema,
@@ -50,7 +51,10 @@ const validCrmIntake = {
   guestsTotal: 120,
   modality: "integral" as const,
   source: "referido" as const,
-  serviceInterests: ["decoracion", "catering"],
+  serviceInterests: [
+    { label: "Decoración", details: "Decoración actual" },
+    { label: "Mozos", quantity: 2, unit: "personas" },
+  ],
   proposedAmountCents: 420_000,
   proposalServicesSummary: "Propuesta referencial DEMO",
   idempotencyKey,
@@ -295,6 +299,42 @@ describe("activity and pipeline transitions", () => {
         expectedUpdatedAt: updatedAt,
       }).success,
     ).toBe(true);
+  });
+});
+
+describe("opportunity service details", () => {
+  it("accepts quantities, units and descriptive scope", () => {
+    const result = opportunityServicesUpdateSchema.parse({
+      services: [
+        {
+          label: "Mobiliario",
+          quantity: 20,
+          unit: "mesas",
+          details: "5 sillas por mesa",
+        },
+        { label: "Mozos", quantity: 2, unit: "personas" },
+      ],
+      expectedUpdatedAt: updatedAt,
+      idempotencyKey,
+    });
+
+    expect(result.services[0]?.quantity).toBe(20);
+    expect(result.services[0]?.details).toBe("5 sillas por mesa");
+  });
+
+  it("rejects duplicate labels and non-positive quantities", () => {
+    expect(
+      opportunityServicesUpdateSchema.safeParse({
+        services: [{ label: "Mozos" }, { label: "mozos" }],
+        idempotencyKey,
+      }).success,
+    ).toBe(false);
+    expect(
+      opportunityServicesUpdateSchema.safeParse({
+        services: [{ label: "Mozos", quantity: 0 }],
+        idempotencyKey,
+      }).success,
+    ).toBe(false);
   });
 });
 
