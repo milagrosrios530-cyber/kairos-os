@@ -1177,11 +1177,11 @@ kairos-os/
 
 | ID | Pregunta a resolver | Valor provisional técnico | Bloquea |
 |---|---|---|---|
-| D-01 | ¿El salón se vende a una sola celebración por fecha? | **Sí, por día completo** para seguridad inicial | Política de calendario |
+| D-01 | ¿El salón se vende a una sola celebración por fecha? | **Aprobado: máximo un evento por día completo** | Política de calendario |
 | D-02 | ¿Cuál es el horario válido de uso / hora máxima? | Parametrizable; 8 h es solo referencia del borrador | Cotización definitiva |
 | D-03 | ¿Cuánto dura un hold? | Sugerencia 24 h, pendiente | Automatización de holds |
 | D-04 | ¿El cliente puede solicitar hold por web? | No; solo consulta pública | Portal |
-| D-05 | ¿Qué monto/documento confirma reserva? | Requiere contrato/aceptación y abono verificado; porcentaje a aprobar | Cobros/confirmación |
+| D-05 | ¿Qué monto/documento confirma reserva? | Aprobado parcialmente: abono verificado mínimo de **S/500**, incluido en el total; debe alcanzarse **50% del total 15 días antes**. Pendiente precisar si el contrato es condición adicional y el momento exacto del saldo final | Cobros/confirmación |
 | D-06 | ¿Cuáles precios intermedios se aprueban? | Ninguno activado por defecto | Cotizaciones oficiales |
 | D-07 | ¿Cuál es el stock exacto de mesas/sillas? | Por inventariar | Validación final mobiliario |
 | D-08 | ¿Cuál es aforo legal autorizado por formato? | Sin cifra legal registrada por defecto | Promesas de aforo |
