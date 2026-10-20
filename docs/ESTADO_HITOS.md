@@ -16,7 +16,7 @@ Puerta local: `lint`, `typecheck`, tests y build pasan en esta entrega.
 
 Puerta de base remota verificada el 19 de octubre de 2026:
 
-- historial local/remoto sincronizado con una migración;
+- historial local/remoto sincronizado con dos migraciones;
 - cinco tablas de identidad presentes y con RLS habilitado;
 - cinco políticas RLS esperadas presentes;
 - `anon` sin lectura de perfiles o roles;
@@ -25,11 +25,15 @@ Puerta de base remota verificada el 19 de octubre de 2026:
 - RPC de invitaciones ejecutable solo por `service_role`;
 - prueba pgTAP remota de 17 controles ejecutada dentro de una transacción con `ROLLBACK`;
 - registro público de Auth desactivado y callbacks locales configurados en remoto.
-- asesor de seguridad de Supabase sin hallazgos después del hardening.
+- asesor de seguridad de Supabase sin hallazgos de tablas, funciones o RLS después del hardening;
+- primer usuario interno enlazado con perfil activo y rol `SUPERADMIN`;
+- autorización `SUPERADMIN` verificada bajo un JWT simulado del rol `authenticated` y RLS real.
 
-El asesor de rendimiento solo informa índices todavía sin uso porque las tablas están vacías; no es un error abierto.
+El asesor de rendimiento solo informa índices todavía sin uso porque el entorno acaba de inicializarse y no tiene tráfico; no es un error abierto.
 
-Pendiente para cerrar completamente la puerta de staging: añadir la URL de callback de Vercel cuando exista, crear el primer `SUPERADMIN` con identidad aprobada y ejecutar el flujo real `SUPERADMIN` frente a `COMERCIAL`.
+Pendiente para cerrar completamente la puerta de staging: añadir la URL de callback de Vercel cuando exista y ejecutar una invitación real controlada para verificar el flujo `SUPERADMIN` frente a `COMERCIAL` sin usar un correo ficticio.
+
+Aviso abierto de Auth: Supabase informa que la protección contra contraseñas filtradas está desactivada. Debe habilitarse y la contraseña inicial compartida por el administrador debe rotarse antes de producción.
 
 ## Hitos 2 a 7
 
