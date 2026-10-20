@@ -1,5 +1,8 @@
 import { AuthShell } from "@/components/auth/auth-shell";
 import { UpdatePasswordForm } from "@/components/auth/update-password-form";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Definir contraseña" };
 
 export default function UpdatePasswordPage() {
   return (

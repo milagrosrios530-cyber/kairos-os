@@ -5,8 +5,8 @@ import { useActionState } from "react";
 import { updatePasswordAction } from "@/app/(auth)/actions";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/auth/password-input";
 import { initialAuthState } from "@/lib/auth/action-state";
 
 export function UpdatePasswordForm() {
@@ -24,10 +24,10 @@ export function UpdatePasswordForm() {
       ) : null}
       <div className="space-y-2">
         <Label htmlFor="password">Nueva contraseña</Label>
-        <Input
+        <PasswordInput
+          autoFocus
           id="password"
           name="password"
-          type="password"
           autoComplete="new-password"
           required
         />
@@ -39,15 +39,19 @@ export function UpdatePasswordForm() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="confirmPassword">Repite la contraseña</Label>
-        <Input
+        <PasswordInput
           id="confirmPassword"
           name="confirmPassword"
-          type="password"
           autoComplete="new-password"
           required
         />
+        {state.fieldErrors?.confirmPassword?.map((message) => (
+          <p className="text-sm text-destructive" key={message}>
+            {message}
+          </p>
+        ))}
       </div>
-      <Button className="h-11 w-full" disabled={pending} type="submit">
+      <Button className="h-11 w-full rounded-xl shadow-sm" disabled={pending} type="submit">
         {pending ? "Guardando…" : "Definir contraseña"}
       </Button>
     </form>

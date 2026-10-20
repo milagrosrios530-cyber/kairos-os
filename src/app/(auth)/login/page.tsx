@@ -2,6 +2,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { LoginForm } from "@/components/auth/login-form";
 import { hasSupabasePublicEnv } from "@/lib/env";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Iniciar sesión" };
 
 export default function LoginPage() {
   const configured = hasSupabasePublicEnv();

@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/auth/password-input";
 import { initialAuthState } from "@/lib/auth/action-state";
 
 export function LoginForm() {
@@ -17,7 +18,7 @@ export function LoginForm() {
   );
 
   return (
-    <form action={action} className="space-y-5">
+    <form action={action} className="space-y-5" noValidate>
       {state.message ? (
         <Alert variant="destructive" role="alert">
           <AlertDescription>{state.message}</AlertDescription>
@@ -27,12 +28,15 @@ export function LoginForm() {
       <div className="space-y-2">
         <Label htmlFor="email">Correo de trabajo</Label>
         <Input
+          autoFocus
+          className="h-11 rounded-xl bg-white"
           id="email"
           name="email"
           type="email"
           autoComplete="email"
           inputMode="email"
           required
+          placeholder="nombre@empresa.com"
           aria-invalid={Boolean(state.fieldErrors?.email)}
         />
         {state.fieldErrors?.email?.map((message) => (
@@ -52,21 +56,25 @@ export function LoginForm() {
             Recuperar acceso
           </Link>
         </div>
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           autoComplete="current-password"
           required
           aria-invalid={Boolean(state.fieldErrors?.password)}
         />
+        {state.fieldErrors?.password?.map((message) => (
+          <p className="text-sm text-destructive" key={message}>
+            {message}
+          </p>
+        ))}
       </div>
 
-      <Button className="h-11 w-full" disabled={pending} type="submit">
+      <Button className="h-11 w-full rounded-xl shadow-sm" disabled={pending} type="submit">
         {pending ? "Validando…" : "Ingresar"}
       </Button>
 
-      <p className="text-center text-xs leading-5 text-muted-foreground">
+      <p className="border-t pt-4 text-center text-xs leading-5 text-muted-foreground">
         No existe registro público. El acceso se habilita únicamente mediante
         invitación interna.
       </p>

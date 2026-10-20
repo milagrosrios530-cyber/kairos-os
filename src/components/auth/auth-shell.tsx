@@ -16,52 +16,62 @@ export function AuthShell({
   backToLogin = false,
 }: AuthShellProps) {
   return (
-    <main className="grid min-h-screen bg-[#181716] lg:grid-cols-[1.05fr_0.95fr]">
-      <section className="relative hidden overflow-hidden p-12 text-[#f5f0e8] lg:flex lg:flex-col lg:justify-between">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(197,164,109,0.28),transparent_34%),linear-gradient(145deg,#24211e,#11100f)]" />
+    <main className="grid min-h-screen bg-[#f5f5f7] lg:grid-cols-[minmax(420px,0.9fr)_minmax(520px,1.1fr)]">
+      <section className="relative hidden overflow-hidden bg-[#1d1d1f] p-12 text-white lg:flex lg:flex-col lg:justify-between xl:p-16">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(197,164,109,0.22),transparent_28%),radial-gradient(circle_at_86%_88%,rgba(255,255,255,0.08),transparent_34%)]" />
         <div className="relative z-10 flex items-center gap-3">
-          <span className="h-px w-12 bg-[#c5a46d]" />
-          <span className="text-xs font-semibold tracking-[0.32em] text-[#d8c08f]">
-            OPERACIÓN INTERNA
+          <span className="flex size-10 items-center justify-center rounded-[14px] bg-[linear-gradient(145deg,#e8d29f,#b58a43)] font-heading text-xl font-semibold text-[#201b14] shadow-[0_8px_24px_rgba(197,164,109,0.2)]">
+            K
           </span>
+          <div>
+            <p className="text-[15px] font-semibold tracking-[0.14em]">KAIROS OS</p>
+            <p className="mt-0.5 text-[9px] font-medium tracking-[0.2em] text-white/42">
+              GESTIÓN INTERNA
+            </p>
+          </div>
         </div>
-        <div className="relative z-10 max-w-xl pb-10">
-          <p className="font-heading text-6xl leading-[0.95] tracking-tight">
-            Cada fecha merece una sola verdad.
+        <div className="relative z-10 max-w-lg pb-8">
+          <p className="text-5xl font-semibold leading-[1.02] tracking-[-0.045em] xl:text-6xl">
+            Una operación clara, desde el primer contacto.
           </p>
-          <p className="mt-6 max-w-md text-base leading-7 text-[#c8c0b7]">
-            Clientes, permisos y reservas se gestionan desde una fuente segura,
-            con trazabilidad desde el primer contacto.
+          <p className="mt-6 max-w-md text-[15px] leading-7 text-white/52">
+            Acceso seguro para el equipo de Kairós. Clientes, permisos y cada
+            cambio importante permanecen conectados y trazables.
           </p>
+          <div className="mt-10 flex items-center gap-2 text-xs text-white/42">
+            <span className="size-1.5 rounded-full bg-emerald-400" />
+            Entorno interno protegido
+          </div>
         </div>
       </section>
 
-      <section className="flex min-h-screen items-center justify-center bg-[#f5f0e8] px-5 py-10 sm:px-10">
-        <div className="w-full max-w-md">
-          <div className="mb-9 flex justify-center">
+      <section className="relative flex min-h-screen items-center justify-center px-5 py-10 sm:px-10">
+        <div className="absolute inset-x-0 top-0 h-64 bg-[radial-gradient(circle_at_top,rgba(197,164,109,0.12),transparent_62%)] lg:hidden" />
+        <div className="relative w-full max-w-[440px]">
+          <div className="mb-8 flex justify-center lg:hidden">
             <Image
               alt="Kairós Salón de Recepciones"
-              className="h-auto w-40 object-contain mix-blend-multiply sm:w-48"
+              className="h-auto w-32 object-contain mix-blend-multiply sm:w-40"
               height={240}
               priority
               src="/brand/kairos-logo.png"
               width={200}
             />
           </div>
-          <div className="rounded-2xl border border-[#ddd3c4] bg-[#fffdf9] p-6 shadow-[0_22px_70px_rgba(24,23,22,0.12)] sm:p-8">
-            <div className="mb-7">
-              <p className="mb-2 text-xs font-semibold tracking-[0.24em] text-[#9b773f]">
-                KAIROS OS
+          <div className="rounded-[28px] border border-black/[0.06] bg-white p-6 shadow-[0_24px_80px_rgba(0,0,0,0.08)] sm:p-9">
+            <div className="mb-8">
+              <p className="mb-3 text-[11px] font-semibold tracking-[0.2em] text-[#8b672f]">
+                ACCESO SEGURO
               </p>
-              <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              <h1 className="text-[32px] font-semibold tracking-[-0.035em]">{title}</h1>
+              <p className="mt-2.5 text-sm leading-6 text-muted-foreground">
                 {description}
               </p>
             </div>
             {children}
             {backToLogin ? (
               <Link
-                className="mt-6 block text-center text-sm font-medium text-[#8b672f] underline-offset-4 hover:underline"
+                className="mt-6 block text-center text-sm font-medium text-[#7a5928] underline-offset-4 hover:underline"
                 href="/login"
               >
                 Volver al inicio de sesión

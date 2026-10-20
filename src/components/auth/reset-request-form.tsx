@@ -24,9 +24,19 @@ export function ResetRequestForm() {
       ) : null}
       <div className="space-y-2">
         <Label htmlFor="email">Correo de trabajo</Label>
-        <Input id="email" name="email" type="email" required />
+        <Input
+          autoComplete="email"
+          autoFocus
+          className="h-11 rounded-xl bg-white"
+          id="email"
+          inputMode="email"
+          name="email"
+          placeholder="nombre@empresa.com"
+          required
+          type="email"
+        />
       </div>
-      <Button className="h-11 w-full" disabled={pending} type="submit">
+      <Button className="h-11 w-full rounded-xl shadow-sm" disabled={pending} type="submit">
         {pending ? "Procesando…" : "Enviar instrucciones"}
       </Button>
     </form>

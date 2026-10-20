@@ -71,27 +71,50 @@ export function InviteUserForm() {
   }
 
   return (
-    <form className="space-y-4" onSubmit={submit}>
+    <form className="space-y-5" onSubmit={submit}>
       {message ? (
-        <Alert variant={message.kind === "error" ? "destructive" : "default"}>
+        <Alert
+          aria-live="polite"
+          className={message.kind === "success" ? "border-emerald-200 bg-emerald-50" : undefined}
+          variant={message.kind === "error" ? "destructive" : "default"}
+        >
           <AlertDescription>{message.text}</AlertDescription>
         </Alert>
       ) : null}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="fullName">Nombre completo</Label>
-          <Input id="fullName" name="fullName" required />
+          <Input
+            autoComplete="name"
+            className="h-11 rounded-xl bg-white"
+            disabled={pending}
+            id="fullName"
+            name="fullName"
+            placeholder="Nombre y apellidos"
+            required
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="email">Correo de trabajo</Label>
-          <Input id="email" name="email" type="email" required />
+          <Input
+            autoComplete="email"
+            className="h-11 rounded-xl bg-white"
+            disabled={pending}
+            id="email"
+            inputMode="email"
+            name="email"
+            placeholder="nombre@empresa.com"
+            required
+            type="email"
+          />
         </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="role">Rol inicial</Label>
         <select
-          className="flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="flex h-11 w-full rounded-xl border border-input bg-white px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
           defaultValue="COMERCIAL"
+          disabled={pending}
           id="role"
           name="role"
         >
@@ -102,9 +125,14 @@ export function InviteUserForm() {
           ))}
         </select>
       </div>
-      <Button disabled={pending} type="submit">
+      <div className="flex flex-col gap-3 border-t border-black/[0.055] pt-5 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs leading-5 text-muted-foreground">
+          La persona recibirá un enlace para definir su contraseña.
+        </p>
+        <Button className="h-11 shrink-0 rounded-xl px-4" disabled={pending} type="submit">
         <Send /> {pending ? "Enviando…" : "Enviar invitación"}
-      </Button>
+        </Button>
+      </div>
     </form>
   );
 }
