@@ -1,4 +1,4 @@
-# Pruebas de aceptación para Hito 0 y Hito 1
+# Pruebas de aceptación hasta Hito 2
 
 ## Automatizadas
 
@@ -6,6 +6,9 @@
 - Validación: correos, nombres, roles y contraseñas se rechazan en servidor cuando son inválidos.
 - Contrato SQL: tablas Hito 1, RLS, ausencia de lectura anónima, bloqueo de inserción directa de roles y auditoría no falsificable.
 - Compilación: lint sin advertencias, TypeScript estricto, Vitest y build de producción.
+- CRM: normalización de teléfonos, DNI/RUC coherente, fechas válidas, totales de invitados, montos enteros no contractuales, duplicados justificados, tareas/visitas y transiciones con resultado.
+- SQL Hito 2: 50 aserciones sobre tablas, RLS, ausencia de acceso anónimo, ausencia de escritura directa, RPCs guardadas, FKs, append-only, auditoría sanitizada y concurrencia optimista.
+- Flujo remoto Hito 2: 9 aserciones transaccionales con `ROLLBACK`, sin dejar fixtures.
 
 ## En staging
 
@@ -16,4 +19,12 @@
 5. Cerrar sesión y abrir `/app`: debe redirigir a `/login` sin datos privados.
 6. Deshabilitar el perfil en base y confirmar que pierde acceso, conservando autoría histórica.
 
-La aceptación final de Hito 1 necesita la ejecución de estas pruebas contra Supabase real; un build exitoso no sustituye esa puerta.
+## En staging — Hito 2
+
+1. Como `SUPERADMIN`, crear un prospecto con tarea y visita, cerrar la visita con resultado y comprobar su línea de tiempo.
+2. Repetir el teléfono y elegir entre vincular el cliente existente o justificar una ficha separada.
+3. Como `COMERCIAL`, verificar que solo aparecen fichas propias/asignadas y que no puede reasignar ni consultar datos de otro asesor.
+4. Recargar y volver a iniciar sesión: el registro debe persistir.
+5. Confirmar que fecha y monto se muestran como tentativos/referenciales y que “Ganado” está bloqueado sin reserva.
+
+La puerta automatizada y remota de Hito 2 está aprobada. El smoke autenticado en navegador con una cuenta comercial real permanece como verificación operativa, no como sustituto de los controles de base ya ejecutados.

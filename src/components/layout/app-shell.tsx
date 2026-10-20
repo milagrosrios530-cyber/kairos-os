@@ -1,9 +1,13 @@
 "use client";
 
 import {
+  BriefcaseBusiness,
   ChevronDown,
+  ContactRound,
   LayoutDashboard,
+  ListChecks,
   LogOut,
+  MapPinned,
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
@@ -45,6 +49,10 @@ type AppShellProps = {
 
 const navigation = [
   { href: "/app", label: "Inicio", icon: LayoutDashboard },
+  { href: "/app/crm", label: "CRM", icon: BriefcaseBusiness, permission: "crm:view" as const },
+  { href: "/app/clientes", label: "Clientes", icon: ContactRound, permission: "crm:view" as const },
+  { href: "/app/tareas", label: "Tareas", icon: ListChecks, permission: "tasks:view" as const },
+  { href: "/app/visitas", label: "Visitas", icon: MapPinned, permission: "visits:view" as const },
   {
     href: "/app/configuracion/usuarios",
     label: "Equipo y permisos",
@@ -55,6 +63,12 @@ const navigation = [
 
 const routeTitles: Record<string, string> = {
   "/app": "Inicio",
+  "/app/crm": "CRM",
+  "/app/crm/nueva": "Nueva oportunidad",
+  "/app/clientes": "Clientes",
+  "/app/clientes/nuevo": "Nuevo cliente",
+  "/app/tareas": "Tareas",
+  "/app/visitas": "Visitas",
   "/app/configuracion/usuarios": "Equipo y permisos",
   "/app/sin-permiso": "Acceso restringido",
 };
@@ -254,7 +268,13 @@ export function AppShell({ viewer, children }: AppShellProps) {
     setCollapsed((current) => !current);
   }
 
-  const pageTitle = routeTitles[pathname] ?? "KAIROS OS";
+  const pageTitle =
+    routeTitles[pathname] ??
+    (pathname.startsWith("/app/crm/")
+      ? "Detalle de oportunidad"
+      : pathname.startsWith("/app/clientes/")
+        ? "Ficha del cliente"
+        : "KAIROS OS");
 
   return (
     <div

@@ -1,16 +1,16 @@
 # Plan de construcción por hitos
 
-## Hito 0 Repositorio y decisiones
+## Hito 0 Repositorio y decisiones — completado
 
 Stack, documentación, variables seguras, migraciones, CI, Vercel, scripts y decisiones pendientes. Estado: implementado localmente; falta vincular servicios externos.
 
-## Hito 1 Identidad permisos y navegación
+## Hito 1 Identidad permisos y navegación — completado
 
 Supabase Auth por invitación, perfiles, roles, RLS, auditoría, protección de rutas y shell adaptable. Estado: implementado en código; falta validación contra Supabase staging.
 
-## Hito 2 CRM y seguimiento
+## Hito 2 CRM y seguimiento — completado
 
-Clientes, oportunidades, deduplicación orientativa, Kanban, actividades, tareas, visitas, búsqueda y dashboard básico. Puerta: persistencia y permisos comprobados entre sesiones/equipos.
+Clientes, oportunidades, deduplicación orientativa, Kanban, actividades, tareas, visitas, búsqueda y dashboard básico. Puerta automatizada y de base remota aprobada; queda el smoke manual autenticado con `COMERCIAL` como control operativo.
 
 ## Hito 3 Calendario y reservas
 
@@ -32,4 +32,4 @@ Checklists, recursos, reportes, notificaciones, observabilidad, accesibilidad, p
 
 Dominio, secretos, alertas, maestros aprobados, usuarios reales, capacitación, rollback y soporte. No se promueve sin pruebas de permisos, disponibilidad y recuperación.
 
-No se inicia Hito 2 hasta presentar y aprobar el cierre comprobable de Hitos 0 y 1.
+No se inicia Hito 3 hasta presentar este cierre comprobable de Hito 2 y recibir aprobación explícita.

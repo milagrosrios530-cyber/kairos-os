@@ -51,6 +51,35 @@ Decisiones que requieren aprobación de Dirección antes de considerar producci�
 - aprobar la activación de protección contra contraseñas filtradas y la rotación de la credencial administrativa inicial;
 - autorizar expresamente el inicio del Hito 2.
 
-## Hitos 2 a 7
+## Hito 2
 
-No iniciados. La interfaz no muestra métricas inventadas ni botones que aparenten guardar estos módulos.
+Implementado el 20 de octubre de 2026:
+
+- dashboard comercial con conteos reales y alcance global para `SUPERADMIN`/`ADMINISTRADOR` o propio para `COMERCIAL`;
+- clientes con búsqueda, ficha protegida, teléfono/WhatsApp, DNI enmascarado y oportunidades históricas;
+- CRM en lista móvil y Kanban de escritorio, alta transaccional, deduplicación orientativa, etapas y línea de tiempo append-only;
+- captura de evento solicitado, fecha tentativa, invitados, servicios, asesor y monto propuesto expresamente no tarifario;
+- tareas y visitas persistentes, con resultado obligatorio al completar;
+- permisos revalidados en servidor y PostgreSQL, 28 políticas RLS, auditoría, idempotencia y concurrencia optimista;
+- las tablas CRM conceden lectura bajo RLS; las escrituras autenticadas se realizan solo mediante RPCs guardadas y autorizadas.
+
+Supabase remoto: migración `crm_hito2` aplicada. El catálogo inicial contiene 11 tipos de evento de la especificación. No se cargaron clientes, oportunidades ni tarifas demo.
+
+Evidencia de puerta:
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` (39/39) y `pnpm build` pasan;
+- pgTAP remoto: 50/50 controles de esquema, RLS, privilegios, append-only, auditoría y concurrencia;
+- flujo transaccional remoto: 9/9 controles para cliente → oportunidad → propuesta referencial → tarea → visita → calificación → cierres con resultado;
+- el flujo de QA se ejecutó con `ROLLBACK` y se comprobó que quedaron 0 clientes `DEMO QA`;
+- existen 11 tipos de evento activos, 28 políticas CRM y 7 RPC principales concedidas a usuarios autenticados.
+
+Avisos abiertos, no bloqueantes para staging:
+
+- el asesor de Supabase advierte que las RPCs transaccionales son `SECURITY DEFINER`; es intencional porque no se conceden escrituras directas y cada función valida sesión, organización, rol y alcance;
+- la protección de contraseñas filtradas de Supabase Auth continúa desactivada;
+- el asesor de rendimiento marca índices nuevos como no usados y algunas claves foráneas compuestas como no totalmente cubiertas; se medirán con tráfico antes de añadir índices que encarezcan cada escritura;
+- falta una prueba manual autenticada en la interfaz desplegada con una cuenta `COMERCIAL` real.
+
+## Hitos 3 a 7
+
+No iniciados. En particular, la fecha solicitada del CRM es tentativa: no bloquea el salón ni confirma una reserva. El calendario con exclusión PostgreSQL, holds y protección contra doble reserva pertenece al Hito 3 y requiere aprobación explícita para comenzar.

@@ -14,6 +14,38 @@ describe("role permissions", () => {
     expect(hasPermission(["COMERCIAL"], "settings:manage")).toBe(false);
   });
 
+  it("gives superadmin and administrator global Hito 2 access", () => {
+    for (const role of ["SUPERADMIN", "ADMINISTRADOR"] as const) {
+      expect(hasPermission([role], "crm:view")).toBe(true);
+      expect(hasPermission([role], "crm:create")).toBe(true);
+      expect(hasPermission([role], "crm:manage_all")).toBe(true);
+      expect(hasPermission([role], "tasks:view")).toBe(true);
+      expect(hasPermission([role], "tasks:create")).toBe(true);
+      expect(hasPermission([role], "visits:view")).toBe(true);
+      expect(hasPermission([role], "visits:create")).toBe(true);
+      expect(hasPermission([role], "dashboard:view_global")).toBe(true);
+    }
+  });
+
+  it("limits commercial staff to assigned CRM work", () => {
+    expect(hasPermission(["COMERCIAL"], "crm:view")).toBe(true);
+    expect(hasPermission(["COMERCIAL"], "crm:create")).toBe(true);
+    expect(hasPermission(["COMERCIAL"], "tasks:view")).toBe(true);
+    expect(hasPermission(["COMERCIAL"], "tasks:create")).toBe(true);
+    expect(hasPermission(["COMERCIAL"], "visits:view")).toBe(true);
+    expect(hasPermission(["COMERCIAL"], "visits:create")).toBe(true);
+    expect(hasPermission(["COMERCIAL"], "crm:manage_all")).toBe(false);
+    expect(hasPermission(["COMERCIAL"], "dashboard:view_global")).toBe(false);
+  });
+
+  it("does not grant CRM writes to non-commercial roles by default", () => {
+    for (const role of ["COORDINADOR", "FINANZAS", "CONSULTA"] as const) {
+      expect(hasPermission([role], "crm:create")).toBe(false);
+      expect(hasPermission([role], "tasks:create")).toBe(false);
+      expect(hasPermission([role], "visits:create")).toBe(false);
+    }
+  });
+
   it("chooses the most privileged role for display without changing access", () => {
     expect(getPrimaryRole(["COMERCIAL", "ADMINISTRADOR"])).toBe(
       "ADMINISTRADOR",

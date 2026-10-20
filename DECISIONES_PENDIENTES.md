@@ -1,6 +1,6 @@
 # Decisiones pendientes de Dirección
 
-Estado al 19 de octubre de 2026. Ningún valor provisional se considera política comercial aprobada.
+Estado al 20 de octubre de 2026. Ningún valor provisional se considera política comercial aprobada.
 
 | ID | Decisión | Valor técnico provisional | Estado | Bloquea |
 |---|---|---|---|---|
@@ -25,4 +25,4 @@ Estado al 19 de octubre de 2026. Ningún valor provisional se considera polític
 | D-19 | ¿Administrador puede invitar usuarios? | No; solo `SUPERADMIN` en Hito 1 | Pendiente | Delegación de usuarios |
 | D-20 | Límite y MIME permitidos para adjuntos | Sin valor impuesto al proyecto remoto | Pendiente técnica | Módulos con archivos |
 
-Para avanzar a Hito 2 no se requiere resolver precios, aforo ni calendario. Para activar Hito 3 se requiere aprobar como mínimo D-01, D-03 y D-05.
+Hito 2 está implementado sin activar precios, aforo ni calendario. Para iniciar Hito 3 se requiere aprobar como mínimo D-01, D-03 y D-05.
