@@ -10,6 +10,12 @@ describe("role permissions", () => {
     expect(hasPermission(["COMERCIAL"], "users:invite")).toBe(false);
   });
 
+  it("allows administrators to provision operational users", () => {
+    expect(hasPermission(["SUPERADMIN"], "users:create")).toBe(true);
+    expect(hasPermission(["ADMINISTRADOR"], "users:create")).toBe(true);
+    expect(hasPermission(["COMERCIAL"], "users:create")).toBe(false);
+  });
+
   it("does not grant settings access to commercial staff", () => {
     expect(hasPermission(["COMERCIAL"], "settings:manage")).toBe(false);
   });

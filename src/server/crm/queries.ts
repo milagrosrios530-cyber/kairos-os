@@ -1,5 +1,11 @@
 import "server-only";
 
+import { hasPermission } from "@/lib/auth/permissions";
+import {
+  broadUtcMonthRange,
+  instantDateKey,
+  shiftCalendarMonth,
+} from "@/lib/crm/calendar";
 import { createClient } from "@/lib/supabase/server";
 import { requirePermission, type Viewer } from "@/server/auth/session";
 
@@ -655,5 +661,151 @@ export async function listCrmVisits() {
     outcome: row.outcome as string | null,
     staffName: maps.advisers.get(row.staff_id as string) ?? viewer.fullName,
   }));
+}
+
+export async function getCrmCalendarMonth(month: string) {
+  const viewer = await requirePermission("crm:view");
+  const supabase = await createClient();
+  const range = broadUtcMonthRange(month);
+  const firstDate = `${month}-01`;
+  const nextMonthStart = `${shiftCalendarMonth(month, 1)}-01`;
+  const canViewTasks = hasPermission(viewer.roles, "tasks:view");
+  const canViewVisits = hasPermission(viewer.roles, "visits:view");
+
+  const [opportunitiesResult, tasksResult, visitsResult] = await Promise.all([
+    supabase
+      .from("opportunities")
+      .select(
+        "id, opportunity_code, customer_id, event_type_id, assigned_to, pipeline_status, desired_date, occasion_detail, guests_total, updated_at",
+      )
+      .eq("organization_id", viewer.organizationId)
+      .is("archived_at", null)
+      .gte("desired_date", firstDate)
+      .lt("desired_date", nextMonthStart)
+      .not("pipeline_status", "in", "(perdido,descartado)"),
+    canViewTasks
+      ? supabase
+          .from("tasks")
+          .select("id, opportunity_id, customer_id, assignee_id, type, title, due_at, status")
+          .eq("organization_id", viewer.organizationId)
+          .in("status", ["pendiente", "en_progreso"])
+          .gte("due_at", range.start)
+          .lt("due_at", range.end)
+      : Promise.resolve({ data: [], error: null }),
+    canViewVisits
+      ? supabase
+          .from("visits")
+          .select("id, opportunity_id, customer_id, staff_id, start_at, end_at, mode, status")
+          .eq("organization_id", viewer.organizationId)
+          .eq("status", "programada")
+          .gte("start_at", range.start)
+          .lt("start_at", range.end)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+
+  if (opportunitiesResult.error || tasksResult.error || visitsResult.error) {
+    throw new Error("No se pudo consultar la agenda comercial.");
+  }
+
+  const opportunityRows = (opportunitiesResult.data ?? []) as Array<{
+    id: string;
+    opportunity_code: string;
+    customer_id: string;
+    event_type_id: string | null;
+    assigned_to: string;
+    pipeline_status: string;
+    desired_date: string;
+    occasion_detail: string | null;
+    guests_total: number | null;
+    updated_at: string;
+  }>;
+  const taskRows = (tasksResult.data ?? []) as Array<{
+    id: string;
+    opportunity_id: string;
+    customer_id: string;
+    assignee_id: string;
+    type: string;
+    title: string;
+    due_at: string;
+    status: string;
+  }>;
+  const visitRows = (visitsResult.data ?? []) as Array<{
+    id: string;
+    opportunity_id: string;
+    customer_id: string;
+    staff_id: string;
+    start_at: string;
+    end_at: string;
+    mode: string;
+    status: string;
+  }>;
+
+  const maps = await nameMaps(
+    viewer,
+    unique([
+      ...opportunityRows.map((row) => row.customer_id),
+      ...taskRows.map((row) => row.customer_id),
+      ...visitRows.map((row) => row.customer_id),
+    ]),
+    unique(opportunityRows.map((row) => row.event_type_id)),
+    unique([
+      ...opportunityRows.map((row) => row.assigned_to),
+      ...taskRows.map((row) => row.assignee_id),
+      ...visitRows.map((row) => row.staff_id),
+    ]),
+  );
+
+  const requestedDates = opportunityRows.map((row) => ({
+    id: `opportunity-${row.id}`,
+    kind: "solicitud" as const,
+    dateKey: row.desired_date,
+    startsAt: null,
+    opportunityId: row.id,
+    title: maps.customers.get(row.customer_id) ?? "Cliente autorizado",
+    detail: `${row.occasion_detail || (row.event_type_id ? maps.eventTypes.get(row.event_type_id) : null) || "Evento por definir"} · ${row.guests_total ?? "—"} invitados`,
+    status: row.pipeline_status,
+    adviserName: maps.advisers.get(row.assigned_to) ?? viewer.fullName,
+  }));
+  const tasks = taskRows
+    .map((row) => ({
+      id: `task-${row.id}`,
+      kind: "tarea" as const,
+      dateKey: instantDateKey(row.due_at, viewer.timezone),
+      startsAt: row.due_at,
+      opportunityId: row.opportunity_id,
+      title: row.title,
+      detail: maps.customers.get(row.customer_id) ?? "Cliente autorizado",
+      status: row.status,
+      adviserName: maps.advisers.get(row.assignee_id) ?? viewer.fullName,
+    }))
+    .filter((entry) => entry.dateKey.startsWith(`${month}-`));
+  const visits = visitRows
+    .map((row) => ({
+      id: `visit-${row.id}`,
+      kind: "visita" as const,
+      dateKey: instantDateKey(row.start_at, viewer.timezone),
+      startsAt: row.start_at,
+      opportunityId: row.opportunity_id,
+      title: maps.customers.get(row.customer_id) ?? "Cliente autorizado",
+      detail: `Visita ${row.mode}`,
+      status: row.status,
+      adviserName: maps.advisers.get(row.staff_id) ?? viewer.fullName,
+    }))
+    .filter((entry) => entry.dateKey.startsWith(`${month}-`));
+
+  return {
+    month,
+    timezone: viewer.timezone,
+    canCreate: hasPermission(viewer.roles, "crm:create"),
+    entries: [...requestedDates, ...visits, ...tasks].sort((left, right) => {
+      if (left.dateKey !== right.dateKey) return left.dateKey.localeCompare(right.dateKey);
+      return (left.startsAt ?? "").localeCompare(right.startsAt ?? "");
+    }),
+    counts: {
+      requestedDates: requestedDates.length,
+      visits: visits.length,
+      tasks: tasks.length,
+    },
+  };
 }
 

@@ -56,13 +56,13 @@ export async function PATCH(
         ...(params.success ? {} : { opportunityId: ["Identificador inválido."] }),
       });
     }
-    await transitionOpportunity(params.data.id, {
+    const changed = await transitionOpportunity(params.data.id, {
       stage: payload.data.pipelineStatus,
       reason: payload.data.lossReason,
       expectedUpdatedAt: payload.data.expectedUpdatedAt,
       idempotencyKey: payload.data.idempotencyKey ?? requestId,
     });
-    return NextResponse.json({ data: { saved: true }, request_id: requestId });
+    return NextResponse.json({ data: changed, request_id: requestId });
   } catch (error) {
     return apiErrorResponse(error, requestId, "No se pudo cambiar la etapa.");
   }

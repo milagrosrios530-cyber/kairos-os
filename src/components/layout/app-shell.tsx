@@ -2,6 +2,7 @@
 
 import {
   BriefcaseBusiness,
+  CalendarRange,
   ChevronDown,
   ContactRound,
   LayoutDashboard,
@@ -50,6 +51,7 @@ type AppShellProps = {
 const navigation = [
   { href: "/app", label: "Inicio", icon: LayoutDashboard },
   { href: "/app/crm", label: "CRM", icon: BriefcaseBusiness, permission: "crm:view" as const },
+  { href: "/app/agenda", label: "Agenda", icon: CalendarRange, permission: "crm:view" as const },
   { href: "/app/clientes", label: "Clientes", icon: ContactRound, permission: "crm:view" as const },
   { href: "/app/tareas", label: "Tareas", icon: ListChecks, permission: "tasks:view" as const },
   { href: "/app/visitas", label: "Visitas", icon: MapPinned, permission: "visits:view" as const },
@@ -65,6 +67,7 @@ const routeTitles: Record<string, string> = {
   "/app": "Inicio",
   "/app/crm": "CRM",
   "/app/crm/nueva": "Nueva oportunidad",
+  "/app/agenda": "Agenda comercial",
   "/app/clientes": "Clientes",
   "/app/clientes/nuevo": "Nuevo cliente",
   "/app/tareas": "Tareas",

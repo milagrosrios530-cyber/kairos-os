@@ -10,13 +10,14 @@ import {
   passwordResetRequestSchema,
   updatePasswordSchema,
 } from "@/lib/validation/auth";
+import { resolveStaffLoginEmail } from "@/server/users/staff-login";
 
 export async function loginAction(
   _previousState: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
   const parsed = loginSchema.safeParse({
-    email: formData.get("email"),
+    identifier: formData.get("identifier"),
     password: formData.get("password"),
   });
 
@@ -38,11 +39,22 @@ export async function loginAction(
     };
   }
 
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  const email = await resolveStaffLoginEmail(parsed.data.identifier);
+  if (!email) {
+    return {
+      status: "error",
+      message: "Correo, DNI o contraseña incorrectos.",
+    };
+  }
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password: parsed.data.password,
+  });
   if (error) {
     return {
       status: "error",
-      message: "Correo o contraseña incorrectos.",
+      message: "Correo, DNI o contraseña incorrectos.",
     };
   }
 

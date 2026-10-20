@@ -12,7 +12,9 @@ La etiqueta `Production` de Vercel describe el entorno de despliegue de la plata
 
 ## Hito 1
 
-Implementado en código: login sin registro público, recuperación y actualización de contraseña, invitación de empleados, perfiles, roles, RLS, auditoría append-only, protección `proxy.ts`, autorización de servidor, `/api/me`, API administrativa de invitación, navegación base y vista de equipo.
+Implementado en código: login sin registro público, acceso indistinto con correo corporativo o DNI y contraseña, recuperación y actualización de contraseña, alta directa de empleados por roles autorizados, perfiles, roles, RLS, auditoría append-only, protección `proxy.ts`, autorización de servidor, `/api/me`, API administrativa de usuarios, navegación base y vista de equipo.
+
+El alta directa crea la identidad de acceso en Supabase Auth y la enlaza transaccionalmente con perfil, rol e identificador DNI protegido mediante BCrypt salado. El DNI completo no se expone a clientes ni se guarda en auditoría; solo se muestra su terminación. Un `ADMINISTRADOR` puede crear roles operativos, pero no elevar a otra persona a `ADMINISTRADOR` o `SUPERADMIN`; esa elevación queda reservada a `SUPERADMIN`. El correo ingresado funciona como identificador de KAIROS OS, pero no crea por sí solo un buzón externo: el dominio y proveedor corporativo siguen pendientes de Dirección.
 
 La interfaz de Hito 1 incluye una composición limpia y responsive, navegación lateral contraíble, menú móvil, estado de ruta activo, menú de cuenta y cierre de sesión. No se añadió una campana decorativa: las notificaciones persistentes pertenecen a un hito posterior y solo se mostrarán cuando tengan datos y acciones reales.
 
@@ -27,7 +29,7 @@ Puerta de base remota verificada el 19 de octubre de 2026:
 - usuarios autenticados sin concesión directa de roles ni inserción de auditoría;
 - auditoría protegida contra `UPDATE` y `DELETE` por trigger;
 - RPC de invitaciones ejecutable solo por `service_role`;
-- prueba pgTAP remota de 17 controles ejecutada dentro de una transacción con `ROLLBACK`;
+- prueba pgTAP remota de 32 controles ejecutada dentro de una transacción con `ROLLBACK`;
 - registro público de Auth desactivado, URL principal configurada en `https://kairos-os-pi.vercel.app` y callbacks locales y de producción permitidos en remoto;
 - asesor de seguridad de Supabase sin hallazgos de tablas, funciones o RLS después del hardening;
 - primer usuario interno enlazado con perfil activo y rol `SUPERADMIN`;
@@ -39,7 +41,7 @@ Puerta de base remota verificada el 19 de octubre de 2026:
 
 El asesor de rendimiento solo informa índices todavía sin uso porque el entorno acaba de inicializarse y no tiene tráfico; no es un error abierto.
 
-Pendiente para cerrar completamente la puerta autenticada: iniciar sesión manualmente en la URL pública y ejecutar una invitación real controlada para verificar el flujo `SUPERADMIN` frente a `COMERCIAL` sin usar un correo ficticio. La contraseña administrativa no se introdujo mediante automatización.
+Pendiente para cerrar completamente la puerta autenticada: ejecutar un alta controlada de empleado con un correo corporativo real y comprobar login tanto por correo como por DNI frente a una cuenta `COMERCIAL`. No se crea una cuenta ficticia solo para completar esta prueba.
 
 Aviso abierto de Auth: Supabase informa que la protección contra contraseñas filtradas está desactivada. Debe habilitarse y la contraseña inicial compartida por el administrador debe rotarse antes de producción.
 
@@ -47,7 +49,7 @@ Decisiones que requieren aprobación de Dirección antes de considerar producci�
 
 - clasificar el proyecto Supabase actual como `staging` o como producción definitiva y asignar propietario técnico;
 - elegir el dominio público definitivo;
-- aprobar proveedor SMTP, remitente y política de entrega para invitaciones y recuperación;
+- aprobar dominio/proveedor de buzones corporativos, proveedor SMTP, remitente y política de recuperación;
 - aprobar la activación de protección contra contraseñas filtradas y la rotación de la credencial administrativa inicial;
 - autorizar expresamente el inicio del Hito 2.
 
@@ -58,6 +60,9 @@ Implementado el 20 de octubre de 2026:
 - dashboard comercial con conteos reales y alcance global para `SUPERADMIN`/`ADMINISTRADOR` o propio para `COMERCIAL`;
 - clientes con búsqueda, ficha protegida, teléfono/WhatsApp, DNI enmascarado y oportunidades históricas;
 - CRM en lista móvil y Kanban de escritorio, alta transaccional, deduplicación orientativa, etapas y línea de tiempo append-only;
+- Kanban interactivo: cada tarjeta se puede arrastrar entre etapas con actualización optimista, reversión ante error, control de concurrencia, autorización de servidor y auditoría; `Ganado` continúa bloqueado hasta una reserva confirmada;
+- agenda comercial mensual responsive con fechas solicitadas, visitas y tareas persistentes, conteo por día y acceso directo a cada oportunidad;
+- alta simplificada para ejecutivos: cinco datos esenciales visibles y clasificación, servicios, propuesta y actividades en secciones opcionales;
 - captura de evento solicitado, fecha tentativa, invitados, servicios, asesor y monto propuesto expresamente no tarifario;
 - partidas de servicio editables con cantidad, unidad y detalle, además de un detalle libre de la celebración;
 - tareas y visitas persistentes, con resultado obligatorio al completar;
@@ -68,7 +73,7 @@ Supabase remoto: migraciones `crm_hito2` y `crm_service_details` aplicadas. El c
 
 Evidencia de puerta:
 
-- `pnpm lint`, `pnpm typecheck`, `pnpm test` (41/41) y `pnpm build` pasan;
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` (54/54) y `pnpm build` pasan;
 - pgTAP remoto: 58/58 controles de esquema, RLS, privilegios, append-only, auditoría y concurrencia;
 - flujo transaccional remoto: 9/9 controles para cliente → oportunidad → propuesta referencial → tarea → visita → calificación → cierres con resultado;
 - el flujo de QA se ejecutó con `ROLLBACK` y se comprobó que quedaron 0 clientes `DEMO QA`;
@@ -85,4 +90,4 @@ Avisos abiertos, no bloqueantes para staging:
 
 ## Hitos 3 a 7
 
-No iniciados. En particular, la fecha solicitada del CRM es tentativa: no bloquea el salón ni confirma una reserva. El calendario con exclusión PostgreSQL, holds y protección contra doble reserva pertenece al Hito 3 y requiere aprobación explícita para comenzar.
+No iniciados. La nueva agenda es una vista comercial y la fecha solicitada del CRM sigue siendo tentativa: no bloquea el salón ni confirma una reserva. El calendario de disponibilidad real con exclusión PostgreSQL, transacciones, holds y protección contra doble reserva pertenece al Hito 3 y requiere aprobación explícita para comenzar.

@@ -3,6 +3,7 @@ import type { AppRole } from "@/lib/auth/roles";
 export const PERMISSIONS = [
   "app:view",
   "users:invite",
+  "users:create",
   "users:view",
   "audit:view",
   "settings:manage",
@@ -22,6 +23,7 @@ const ROLE_PERMISSIONS: Record<AppRole, readonly Permission[]> = {
   SUPERADMIN: PERMISSIONS,
   ADMINISTRADOR: [
     "app:view",
+    "users:create",
     "users:view",
     "audit:view",
     "crm:view",

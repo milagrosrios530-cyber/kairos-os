@@ -359,8 +359,8 @@ export function NewLeadForm({
       ) : null}
 
       <FormSection
-        description="Busca coincidencias por teléfono al guardar y evita duplicar la historia de un mismo cliente."
-        title="Cliente"
+        description="Solo necesitamos un nombre y un teléfono para comenzar. Buscaremos coincidencias al guardar."
+        title="1. Cliente"
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField label="Nombre completo o razón social" name="fullName" required>
@@ -373,14 +373,6 @@ export function NewLeadForm({
               placeholder="Ej. Ana Pérez"
               required
             />
-          </FormField>
-          <FormField label="Tipo de cliente" name="customerType" required>
-            <NativeSelect disabled={pending} id="customerType" name="customerType">
-              <option value="persona">Persona</option>
-              <option value="empresa">Empresa</option>
-              <option value="comite">Comité</option>
-              <option value="institucion">Institución</option>
-            </NativeSelect>
           </FormField>
           <FormField
             hint="Se normalizará al formato internacional cuando corresponda."
@@ -399,26 +391,14 @@ export function NewLeadForm({
               required
             />
           </FormField>
-          <FormField label="Canal preferido" name="preferredContactChannel" required>
-            <NativeSelect
-              defaultValue="whatsapp"
-              disabled={pending}
-              id="preferredContactChannel"
-              name="preferredContactChannel"
-            >
-              <option value="whatsapp">WhatsApp</option>
-              <option value="llamada">Llamada</option>
-              <option value="correo">Correo</option>
-            </NativeSelect>
-          </FormField>
         </div>
       </FormSection>
 
       <FormSection
         description="Esta información califica la consulta. La fecha solicitada no bloquea ni confirma el salón."
-        title="Evento solicitado"
+        title="2. Evento solicitado"
       >
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           <FormField label="Tipo de evento" name="eventTypeId" required>
             <NativeSelect disabled={pending || eventTypes.length === 0} id="eventTypeId" name="eventTypeId" required>
               <option value="">Selecciona un tipo</option>
@@ -472,6 +452,36 @@ export function NewLeadForm({
               type="number"
             />
           </FormField>
+        </div>
+
+        <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50/75 px-4 py-3">
+          <p className="flex items-start gap-2 text-xs leading-5 text-amber-900 sm:text-sm">
+            <ShieldAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            Registrar esta consulta no ocupa la fecha. La disponibilidad y las reservas se controlan en el motor de calendario.
+          </p>
+        </div>
+      </FormSection>
+
+      <ExpandableFormSection
+        description="Los valores más frecuentes ya están seleccionados. Abre solo si necesitas cambiarlos."
+        title="Clasificación y responsable"
+      >
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <FormField label="Tipo de cliente" name="customerType" required>
+            <NativeSelect defaultValue="persona" disabled={pending} id="customerType" name="customerType">
+              <option value="persona">Persona</option>
+              <option value="empresa">Empresa</option>
+              <option value="comite">Comité</option>
+              <option value="institucion">Institución</option>
+            </NativeSelect>
+          </FormField>
+          <FormField label="Canal preferido" name="preferredContactChannel" required>
+            <NativeSelect defaultValue="whatsapp" disabled={pending} id="preferredContactChannel" name="preferredContactChannel">
+              <option value="whatsapp">WhatsApp</option>
+              <option value="llamada">Llamada</option>
+              <option value="correo">Correo</option>
+            </NativeSelect>
+          </FormField>
           <FormField label="Modalidad" name="modality" required>
             <NativeSelect defaultValue="personalizado" disabled={pending} id="modality" name="modality">
               <option value="solo_local">Solo local</option>
@@ -491,40 +501,21 @@ export function NewLeadForm({
               <option value="otro">Otro</option>
             </NativeSelect>
           </FormField>
-          <FormField
-            hint="Es obligatorio cuando eliges “Otro”."
-            label="Detalle del origen"
-            name="sourceDetail"
-          >
-            <Input
-              className={controlClassName}
-              disabled={pending}
-              id="sourceDetail"
-              name="sourceDetail"
-              placeholder="Campaña, persona o canal"
-            />
+          <FormField hint="Es obligatorio cuando eliges “Otro”." label="Detalle del origen" name="sourceDetail">
+            <Input className={controlClassName} disabled={pending} id="sourceDetail" name="sourceDetail" placeholder="Campaña, persona o canal" />
           </FormField>
           {canAssign ? (
             <FormField hint="Si no eliges uno, se asignará según la regla del servidor." label="Asesor responsable" name="assignedTo">
               <NativeSelect disabled={pending} id="assignedTo" name="assignedTo">
                 <option value="">Asignación automática</option>
                 {advisers.map((adviser) => (
-                  <option key={adviser.id} value={adviser.id}>
-                    {adviser.name}
-                  </option>
+                  <option key={adviser.id} value={adviser.id}>{adviser.name}</option>
                 ))}
               </NativeSelect>
             </FormField>
           ) : null}
         </div>
-
-        <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50/75 px-4 py-3">
-          <p className="flex items-start gap-2 text-xs leading-5 text-amber-900 sm:text-sm">
-            <ShieldAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-            Registrar esta consulta no ocupa la fecha. La disponibilidad y las reservas se controlan en el motor de calendario.
-          </p>
-        </div>
-      </FormSection>
+      </ExpandableFormSection>
 
       <ExpandableFormSection
         description="Contacto adicional, documento y ubicación. Completa solo lo necesario para la atención."

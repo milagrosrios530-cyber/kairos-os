@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  createUserSchema,
   inviteUserSchema,
   loginSchema,
   updatePasswordSchema,
@@ -8,9 +9,21 @@ import {
 
 describe("authentication validation", () => {
   it("rejects malformed login data", () => {
-    expect(loginSchema.safeParse({ email: "no-es-correo", password: "" }).success).toBe(
+    expect(loginSchema.safeParse({ identifier: "no-es-correo", password: "" }).success).toBe(
       false,
     );
+  });
+
+  it("accepts email or DNI as an internal login identifier", () => {
+    expect(
+      loginSchema.safeParse({
+        identifier: "asesor@recepcioneskairos.com",
+        password: "ClaveSegura2026",
+      }).success,
+    ).toBe(true);
+    expect(
+      loginSchema.safeParse({ identifier: "12345678", password: "ClaveSegura2026" }).success,
+    ).toBe(true);
   });
 
   it("accepts an internal invitation with a declared role", () => {
@@ -45,6 +58,22 @@ describe("authentication validation", () => {
         password: "ClaveSegura2026",
         confirmPassword: "otra",
       }).success,
+    ).toBe(false);
+  });
+
+  it("validates direct employee provisioning", () => {
+    const valid = {
+      email: "asesor@recepcioneskairos.com",
+      fullName: "Asesor Interno",
+      dni: "12345678",
+      password: "ClaveSegura2026",
+      confirmPassword: "ClaveSegura2026",
+      role: "COMERCIAL",
+    };
+    expect(createUserSchema.safeParse(valid).success).toBe(true);
+    expect(createUserSchema.safeParse({ ...valid, dni: "1234" }).success).toBe(false);
+    expect(
+      createUserSchema.safeParse({ ...valid, confirmPassword: "OtraClave2026" }).success,
     ).toBe(false);
   });
 });

@@ -26,20 +26,19 @@ export function LoginForm() {
       ) : null}
 
       <div className="space-y-2">
-        <Label htmlFor="email">Correo de trabajo</Label>
+        <Label htmlFor="identifier">Correo corporativo o DNI</Label>
         <Input
           autoFocus
           className="h-11 rounded-xl bg-white"
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          inputMode="email"
+          id="identifier"
+          name="identifier"
+          type="text"
+          autoComplete="username"
           required
-          placeholder="nombre@empresa.com"
-          aria-invalid={Boolean(state.fieldErrors?.email)}
+          placeholder="nombre@empresa.com o 12345678"
+          aria-invalid={Boolean(state.fieldErrors?.identifier)}
         />
-        {state.fieldErrors?.email?.map((message) => (
+        {state.fieldErrors?.identifier?.map((message) => (
           <p className="text-sm text-destructive" key={message}>
             {message}
           </p>
@@ -75,8 +74,8 @@ export function LoginForm() {
       </Button>
 
       <p className="border-t pt-4 text-center text-xs leading-5 text-muted-foreground">
-        No existe registro público. El acceso se habilita únicamente mediante
-        invitación interna.
+        No existe registro público. Solo un administrador autorizado puede crear
+        cuentas internas.
       </p>
     </form>
   );

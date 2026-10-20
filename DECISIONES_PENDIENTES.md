@@ -22,7 +22,8 @@ Estado al 20 de octubre de 2026. Ningún valor provisional se considera polític
 | D-16 | Responsable de tecnología y backups | Sin designar | Pendiente | Producción |
 | D-17 | Saldo en portal privado | Desactivado | Pendiente | Portal P1 |
 | D-18 | Múltiples eventos por fecha | Desactivado | Pendiente | Optimización |
-| D-19 | ¿Administrador puede invitar usuarios? | No; solo `SUPERADMIN` en Hito 1 | Pendiente | Delegación de usuarios |
+| D-19 | ¿Administrador puede crear usuarios? | Aprobado: puede crear roles operativos; solo `SUPERADMIN` eleva a administrador/superadmin | Aprobada 20/10/2026 | — |
 | D-20 | Límite y MIME permitidos para adjuntos | Sin valor impuesto al proyecto remoto | Pendiente técnica | Módulos con archivos |
+| D-21 | Dominio y proveedor de correo corporativo | KAIROS crea la cuenta de acceso, no el buzón externo | Pendiente | Altas con correo corporativo real |
 
-Hito 2 está implementado sin activar precios, aforo ni calendario. Para iniciar Hito 3 se requiere aprobar como mínimo D-01, D-03 y D-05.
+Hito 2 está implementado sin activar precios, aforo ni disponibilidad de reservas. La agenda mensual añadida es exclusivamente comercial. Para iniciar Hito 3 se requiere aprobar como mínimo D-01, D-03 y D-05.

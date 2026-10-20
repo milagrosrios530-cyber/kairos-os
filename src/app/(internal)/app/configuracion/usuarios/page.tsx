@@ -1,17 +1,19 @@
 import { ChevronDown, ShieldCheck, UserPlus, Users } from "lucide-react";
 import { redirect } from "next/navigation";
 
-import { InviteUserForm } from "@/components/users/invite-user-form";
+import { CreateUserForm } from "@/components/users/create-user-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { hasPermission } from "@/lib/auth/permissions";
-import { ROLE_LABELS, type AppRole } from "@/lib/auth/roles";
+import { APP_ROLES, ROLE_LABELS, type AppRole } from "@/lib/auth/roles";
 import { createClient } from "@/lib/supabase/server";
 import { requirePermission, type Viewer } from "@/server/auth/session";
 
 type ProfileRow = {
   user_id: string;
   full_name: string;
+  work_email: string | null;
+  dni_last4: string | null;
   status: "invited" | "active" | "disabled";
   created_at: string;
 };
@@ -55,7 +57,7 @@ export default async function UsersPage() {
   const [profilesResult, rolesResult] = await Promise.all([
     supabase
       .from("profiles")
-      .select("user_id, full_name, status, created_at")
+      .select("user_id, full_name, work_email, dni_last4, status, created_at")
       .eq("organization_id", viewer.organizationId)
       .order("full_name"),
     supabase
@@ -70,7 +72,10 @@ export default async function UsersPage() {
 
   const profileRows = (profilesResult.data ?? []) as ProfileRow[];
   const roleRows = (rolesResult.data ?? []) as RoleRow[];
-  const canInvite = hasPermission(viewer.roles, "users:invite");
+  const canCreate = hasPermission(viewer.roles, "users:create");
+  const allowedRoles = viewer.roles.includes("SUPERADMIN")
+    ? APP_ROLES
+    : (["COMERCIAL", "COORDINADOR", "FINANZAS", "CONSULTA"] as const);
   const activeCount = profileRows.filter((profile) => profile.status === "active").length;
 
   return (
@@ -84,8 +89,8 @@ export default async function UsersPage() {
             Equipo y permisos
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-[15px]">
-            Las cuentas internas se crean exclusivamente por invitación. Cada rol
-            se valida en servidor y toda asignación queda auditada.
+            Crea accesos internos con correo corporativo, DNI y contraseña. Cada
+            rol se valida en servidor y toda asignación queda auditada.
           </p>
         </div>
         <div className="flex gap-3">
@@ -96,16 +101,16 @@ export default async function UsersPage() {
         </div>
       </section>
 
-      {canInvite ? (
+      {canCreate ? (
         <details className="group overflow-hidden rounded-[24px] border border-black/[0.06] bg-white shadow-[0_10px_36px_rgba(0,0,0,0.045)]" open>
           <summary className="flex min-h-16 cursor-pointer list-none items-center gap-3 px-5 py-4 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:px-6">
             <span className="flex size-9 items-center justify-center rounded-xl bg-[#f2ead9] text-[#80602c]">
               <UserPlus aria-hidden="true" className="size-4" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold">Invitar integrante</p>
+              <p className="text-sm font-semibold">Crear usuario interno</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Expande o contrae este formulario cuando lo necesites.
+                El acceso queda activo sin enviar una invitación.
               </p>
             </div>
             <ChevronDown
@@ -114,15 +119,14 @@ export default async function UsersPage() {
             />
           </summary>
           <div className="border-t border-black/[0.055] px-5 py-5 sm:px-6 sm:py-6">
-            <InviteUserForm />
+            <CreateUserForm allowedRoles={allowedRoles} />
           </div>
         </details>
       ) : (
         <div className="flex gap-3 rounded-2xl border border-black/[0.06] bg-white p-4 text-sm shadow-sm">
           <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-[#8b672f]" />
           <p className="leading-6 text-muted-foreground">
-            Puedes consultar el equipo, pero la delegación de invitaciones a
-            administradores aún requiere aprobación de Dirección.
+            Puedes consultar el equipo, pero tu rol no permite crear cuentas.
           </p>
         </div>
       )}
@@ -140,7 +144,7 @@ export default async function UsersPage() {
               <Users aria-hidden="true" className="mx-auto size-8 text-muted-foreground" />
               <p className="mt-3 text-sm font-medium">Aún no hay integrantes</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Usa el formulario de invitación para crear el primer acceso.
+                Usa el formulario superior para crear el primer acceso.
               </p>
             </div>
           ) : (
@@ -167,6 +171,12 @@ export default async function UsersPage() {
                       <p className="mt-1.5 text-xs text-muted-foreground">
                         Registrado el {formatDate(profile.created_at)}
                       </p>
+                      {profile.work_email || profile.dni_last4 ? (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {profile.work_email ?? "Correo no registrado"}
+                          {profile.dni_last4 ? ` · DNI •••• ${profile.dni_last4}` : ""}
+                        </p>
+                      ) : null}
                     </div>
                     <div className="flex flex-wrap gap-2 sm:justify-end">
                       {profileRoles.map(({ role }) => (
