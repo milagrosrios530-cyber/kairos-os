@@ -7,7 +7,8 @@
 - URL pública: [https://kairos-os-pi.vercel.app](https://kairos-os-pi.vercel.app).
 - Supabase conectado: proyecto `uhicgqxmynqbddmrgzrn`.
 - Variables de Producción: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_APP_URL` y `SUPABASE_SERVICE_ROLE_KEY`.
-- La service key está almacenada como secreto de Vercel y fue creada exclusivamente para este despliegue. No se expone al navegador ni se versiona.
+- La integración oficial Supabase-Vercel está instalada únicamente para `kairos-os`.
+- La service key está almacenada como secreto de Vercel y fue creada exclusivamente para este despliegue. La clave temporal de instalación fue revocada, el secreto fue rotado y se ejecutó un nuevo despliegue `Ready`. La clave vigente no se expone al navegador ni se versiona.
 - Site URL y callback `https://kairos-os-pi.vercel.app/auth/callback` autorizados en Supabase Auth.
 - Prueba pública: `/login` devuelve HTTP 200 y un intento inválido llega a Supabase y devuelve el mensaje controlado de credenciales.
 - Prueba de acceso: `/app` y `/app/configuracion/usuarios` redirigen al login sin sesión.

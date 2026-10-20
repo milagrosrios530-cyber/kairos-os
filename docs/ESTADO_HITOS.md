@@ -6,7 +6,7 @@ Implementado en repositorio: Next.js, TypeScript, Tailwind, shadcn/ui, scripts d
 
 Supabase remoto: las migraciones `20261019010000_identity_and_access.sql` y `20261019020000_security_hardening.sql` están aplicadas en el proyecto `uhicgqxmynqbddmrgzrn`. El proyecto se trata como `staging` hasta que Dirección apruebe expresamente su clasificación y propiedad de producción. No se ejecutó ningún seed demo.
 
-Vercel: el repositorio está vinculado al proyecto `kairos-os` y la interfaz está publicada en [https://kairos-os-pi.vercel.app](https://kairos-os-pi.vercel.app). Las tres variables públicas se guardaron como configuración y la clave administrativa como secreto de Producción. La clave privada usada por Vercel es exclusiva y revocable; no se guardó en Git.
+Vercel: el repositorio está vinculado al proyecto `kairos-os` y la interfaz está publicada en [https://kairos-os-pi.vercel.app](https://kairos-os-pi.vercel.app). La integración oficial Supabase-Vercel quedó instalada para este proyecto. Las tres variables públicas de la aplicación se guardaron como configuración y la clave administrativa como secreto de Producción. La clave privada usada por Vercel es exclusiva y revocable; no se guardó en Git. La credencial temporal utilizada durante la conexión fue revocada, sustituida por una clave rotada y el despliegue posterior quedó `Ready`.
 
 La etiqueta `Production` de Vercel describe el entorno de despliegue de la plataforma. No resuelve la decisión comercial pendiente sobre si el Supabase actual será la base productiva definitiva.
 
