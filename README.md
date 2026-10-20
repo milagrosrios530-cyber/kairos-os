@@ -12,8 +12,8 @@ Base segura del sistema interno de gestión y reservas del Salón de Recepciones
 ## Puesta en marcha
 
 1. Copiar `.env.example` a `.env.local` y completar URL, publishable key y service role key de Supabase staging.
-2. Aplicar `supabase/migrations/20261019010000_identity_and_access.sql` mediante Supabase CLI o el flujo de migraciones del proyecto.
-3. Desactivar el registro público en Supabase Auth y configurar las URL de redirección `http://localhost:3000/auth/callback` y la de staging.
+2. En un proyecto nuevo, aplicar en orden las migraciones de `supabase/migrations/` mediante Supabase CLI o el flujo de migraciones del proyecto. Las dos migraciones actuales ya están aplicadas en el proyecto KAIROS entregado con ref `uhicgqxmynqbddmrgzrn`.
+3. Desactivar el registro público en Supabase Auth y configurar las URL de redirección `http://localhost:3000/auth/callback` y la de staging. En el proyecto KAIROS entregado, el registro público y los callbacks locales ya están configurados; falta añadir la URL de Vercel cuando exista.
 4. Ejecutar el bootstrap inicial una sola vez:
 
    ```powershell
@@ -34,10 +34,10 @@ pnpm test
 pnpm build
 ```
 
-Las pruebas SQL requieren una base Supabase migrada:
+Las pruebas SQL requieren una base Supabase migrada. Para ejecutarlas contra el proyecto enlazado sin dejar datos de prueba:
 
 ```powershell
-pnpm dlx supabase test db
+pnpm dlx supabase db query --linked --project-ref uhicgqxmynqbddmrgzrn --file supabase/tests/identity_rls.test.sql --agent no
 ```
 
 ## Prueba manual de Hito 1
@@ -51,8 +51,8 @@ pnpm dlx supabase test db
 
 ## Límites de esta entrega
 
-- No hay conexión remota incluida en el repositorio y no se guardan secretos.
+- La migración está aplicada en el proyecto Supabase indicado, pero el repositorio no guarda claves ni tokens.
 - No hay reservas, clientes ni tarifas; pertenecen a hitos posteriores.
-- La base protege datos internos con RLS, pero la migración debe aplicarse y probarse en Supabase antes de considerar staging operativo.
+- La base protege datos internos con RLS. Staging no se considera completamente operativo hasta verificar la configuración remota de Auth y probar el flujo real entre un `SUPERADMIN` y un `COMERCIAL` invitados.
 
 Consulta `docs/ESTADO_HITOS.md`, `docs/seguridad-rbac.md`, `docs/despliegue.md` y `DECISIONES_PENDIENTES.md` antes de avanzar.

@@ -43,3 +43,6 @@ next-env.d.ts
 
 # Codex scratch area
 /work/
+
+# Supabase CLI local project metadata
+/supabase/.temp/
