@@ -20,6 +20,10 @@ const passwordHashingMigration = readFileSync(
   ),
   "utf8",
 ).toLowerCase();
+const staffProvisioningService = readFileSync(
+  join(process.cwd(), "src", "server", "users", "staff-login.ts"),
+  "utf8",
+).toLowerCase();
 
 describe("direct staff provisioning contract", () => {
   it("stores only a protected identifier and a four-digit hint", () => {
@@ -48,5 +52,12 @@ describe("direct staff provisioning contract", () => {
     expect(passwordHashingMigration).toContain("resolve_staff_login_email");
     expect(passwordHashingMigration).toContain("from public, anon, authenticated");
     expect(passwordHashingMigration).not.toContain("supabase_service_role_key");
+  });
+
+  it("creates the Supabase Auth identity directly and rolls it back if provisioning fails", () => {
+    expect(staffProvisioningService).toContain("admin.auth.admin.createuser");
+    expect(staffProvisioningService).toContain("email_confirm: true");
+    expect(staffProvisioningService).toContain('admin.rpc(\n    "complete_employee_provisioning"');
+    expect(staffProvisioningService).toContain("admin.auth.admin.deleteuser");
   });
 });
