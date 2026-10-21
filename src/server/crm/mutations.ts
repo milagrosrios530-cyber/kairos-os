@@ -135,6 +135,13 @@ function maskPhone(phone: string) {
 
 function mapDatabaseError(error: DatabaseError, fallback: string): never {
   if (error.code === "42501") throw new AuthorizationError();
+  if (error.code === "23P01") {
+    throw new ApplicationError(
+      "EVENT_DATE_ALREADY_OCCUPIED",
+      409,
+      "Esa fecha ya tiene un evento o una retención activa. Elige otro día para continuar.",
+    );
+  }
   if (error.code === "P0002") {
     throw new ApplicationError(
       "CRM_RECORD_NOT_FOUND",

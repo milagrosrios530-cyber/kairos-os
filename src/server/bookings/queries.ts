@@ -36,6 +36,7 @@ type BookingRow = {
 type AllocationRow = {
   id: string;
   booking_id: string | null;
+  opportunity_id: string | null;
   kind: "hold" | "booking" | "blackout";
   local_date: string;
   blocking: boolean;
@@ -43,36 +44,57 @@ type AllocationRow = {
   reason: string | null;
 };
 
+type OpportunityCalendarRow = {
+  id: string;
+  customer_id: string;
+  event_type_id: string | null;
+  assigned_to: string;
+  occasion_detail: string | null;
+};
+
 function unique(values: Array<string | null | undefined>) {
   return [...new Set(values.filter((value): value is string => Boolean(value)))];
 }
 
-async function bookingNameMaps(
+async function calendarNameMaps(
   organizationId: string,
   bookings: BookingRow[],
+  opportunities: OpportunityCalendarRow[],
 ) {
   const supabase = await createClient();
+  const customerIds = unique([
+    ...bookings.map((booking) => booking.customer_id),
+    ...opportunities.map((opportunity) => opportunity.customer_id),
+  ]);
+  const eventTypeIds = unique([
+    ...bookings.map((booking) => booking.event_type_id),
+    ...opportunities.map((opportunity) => opportunity.event_type_id),
+  ]);
+  const adviserIds = unique([
+    ...bookings.map((booking) => booking.assigned_to),
+    ...opportunities.map((opportunity) => opportunity.assigned_to),
+  ]);
   const [customers, eventTypes, profiles, venues] = await Promise.all([
-    bookings.length
+    customerIds.length
       ? supabase
           .from("customers")
           .select("id, full_name")
           .eq("organization_id", organizationId)
-          .in("id", unique(bookings.map((booking) => booking.customer_id)))
+          .in("id", customerIds)
       : Promise.resolve({ data: [], error: null }),
-    bookings.length
+    eventTypeIds.length
       ? supabase
           .from("event_types")
           .select("id, name")
           .eq("organization_id", organizationId)
-          .in("id", unique(bookings.map((booking) => booking.event_type_id)))
+          .in("id", eventTypeIds)
       : Promise.resolve({ data: [], error: null }),
-    bookings.length
+    adviserIds.length
       ? supabase
           .from("profiles")
           .select("user_id, full_name")
           .eq("organization_id", organizationId)
-          .in("user_id", unique(bookings.map((booking) => booking.assigned_to)))
+          .in("user_id", adviserIds)
       : Promise.resolve({ data: [], error: null }),
     bookings.length
       ? supabase
@@ -99,13 +121,20 @@ async function bookingNameMaps(
   };
 }
 
+async function bookingNameMaps(
+  organizationId: string,
+  bookings: BookingRow[],
+) {
+  return calendarNameMaps(organizationId, bookings, []);
+}
+
 export async function getBookingCalendarMonth(month: string) {
   const viewer = await requirePermission("calendar:view");
   const supabase = await createClient();
   const nextMonth = shiftCalendarMonth(month, 1);
   const { data, error } = await supabase
     .from("schedule_allocations")
-    .select("id, booking_id, kind, local_date, blocking, hold_expires_at, reason")
+    .select("id, booking_id, opportunity_id, kind, local_date, blocking, hold_expires_at, reason")
     .eq("organization_id", viewer.organizationId)
     .eq("blocking", true)
     .gte("local_date", `${month}-01`)
@@ -127,6 +156,9 @@ export async function getBookingCalendarMonth(month: string) {
       || new Date(allocation.hold_expires_at).getTime() > now,
   );
   const bookingIds = unique(allocations.map((allocation) => allocation.booking_id));
+  const opportunityIds = unique(
+    allocations.map((allocation) => allocation.opportunity_id),
+  );
   const bookingResult = bookingIds.length
     ? await supabase
         .from("bookings")
@@ -142,9 +174,32 @@ export async function getBookingCalendarMonth(month: string) {
     );
   }
 
+  const opportunityResult = opportunityIds.length
+    ? await supabase
+        .from("opportunities")
+        .select("id, customer_id, event_type_id, assigned_to, occasion_detail")
+        .eq("organization_id", viewer.organizationId)
+        .in("id", opportunityIds)
+    : { data: [], error: null };
+  if (opportunityResult.error) {
+    throw new ApplicationError(
+      "BOOKING_CALENDAR_OPPORTUNITIES_FAILED",
+      500,
+      "No se pudieron completar los datos autorizados del calendario.",
+    );
+  }
+
   const bookings = (bookingResult.data ?? []) as BookingRow[];
+  const opportunities = (opportunityResult.data ?? []) as OpportunityCalendarRow[];
   const bookingMap = new Map(bookings.map((booking) => [booking.id, booking]));
-  const maps = await bookingNameMaps(viewer.organizationId, bookings);
+  const opportunityMap = new Map(
+    opportunities.map((opportunity) => [opportunity.id, opportunity]),
+  );
+  const maps = await calendarNameMaps(
+    viewer.organizationId,
+    bookings,
+    opportunities,
+  );
 
   return {
     timezone: viewer.timezone,
@@ -154,6 +209,9 @@ export async function getBookingCalendarMonth(month: string) {
       const booking = allocation.booking_id
         ? bookingMap.get(allocation.booking_id)
         : undefined;
+      const opportunity = allocation.opportunity_id
+        ? opportunityMap.get(allocation.opportunity_id)
+        : undefined;
       const genericLabel = allocation.kind === "blackout"
         ? "Fecha no disponible"
         : allocation.kind === "hold"
@@ -162,17 +220,32 @@ export async function getBookingCalendarMonth(month: string) {
       return {
         id: allocation.id,
         bookingId: booking?.id ?? null,
+        opportunityId: booking?.opportunity_id ?? opportunity?.id ?? null,
         dateKey: allocation.local_date,
         kind: allocation.kind,
-        status: booking?.status ?? (allocation.kind === "blackout" ? "blackout" : allocation.kind),
-        title: booking ? maps.eventTypes.get(booking.event_type_id ?? "") ?? "Evento" : genericLabel,
-        customerName: booking ? maps.customers.get(booking.customer_id) ?? "Cliente autorizado" : null,
-        adviserName: booking ? maps.profiles.get(booking.assigned_to) ?? "Asesor autorizado" : null,
+        status: booking?.status ?? (allocation.kind === "hold" ? "held" : "blackout"),
+        title: booking
+          ? maps.eventTypes.get(booking.event_type_id ?? "") ?? "Evento"
+          : opportunity
+            ? opportunity.occasion_detail
+              ?? maps.eventTypes.get(opportunity.event_type_id ?? "")
+              ?? "Evento"
+            : genericLabel,
+        customerName: booking
+          ? maps.customers.get(booking.customer_id) ?? "Cliente autorizado"
+          : opportunity
+            ? maps.customers.get(opportunity.customer_id) ?? "Cliente autorizado"
+            : null,
+        adviserName: booking
+          ? maps.profiles.get(booking.assigned_to) ?? "Asesor autorizado"
+          : opportunity
+            ? maps.profiles.get(opportunity.assigned_to) ?? "Asesor autorizado"
+            : null,
         bookingCode: booking?.booking_code ?? null,
         eventStartTime: booking?.event_start_time ?? null,
         holdExpiresAt: allocation.hold_expires_at,
         reason: allocation.kind === "blackout" ? allocation.reason : null,
-        detailsVisible: Boolean(booking),
+        detailsVisible: Boolean(booking || opportunity),
       };
     }),
   };

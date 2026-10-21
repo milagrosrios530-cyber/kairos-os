@@ -95,6 +95,7 @@ export default async function BookingCalendarPage({ searchParams }: { searchPara
               <div className={`mt-1 rounded-lg border px-1.5 py-1.5 text-[9px] leading-3 sm:mt-2 sm:rounded-xl sm:px-2.5 sm:py-2 sm:text-[11px] sm:leading-4 ${BOOKING_STATUS_STYLES[entry.status] ?? BOOKING_STATUS_STYLES.blackout}`}>
                 <span className="block font-semibold sm:hidden">{entry.status === "confirmed" ? "RES" : entry.kind === "hold" ? "HOLD" : "NO"}</span>
                 <span className="hidden font-semibold sm:block">{BOOKING_STATUS_LABELS[entry.status] ?? "No disponible"}</span>
+                {entry.customerName ? <span className="mt-0.5 hidden truncate font-medium sm:block">{entry.customerName}</span> : null}
                 <span className="mt-0.5 hidden truncate opacity-75 sm:block">{entry.title}</span>
                 {entry.eventStartTime ? <span className="mt-0.5 hidden opacity-65 sm:block">{entry.eventStartTime.slice(0, 5)}</span> : null}
               </div>
@@ -102,7 +103,11 @@ export default async function BookingCalendarPage({ searchParams }: { searchPara
             return (
               <div className={`min-h-16 border-b border-r border-black/[0.045] p-1 sm:min-h-36 sm:p-2 ${available ? "bg-emerald-50/20" : ""}`} key={day.dateKey}>
                 <div className="flex items-center justify-between"><span className={`flex size-6 items-center justify-center rounded-full text-[11px] font-semibold sm:size-7 sm:text-xs ${day.dateKey === today ? "bg-[#1d1d1f] text-white" : ""}`}>{day.day}</span>{available ? <span className="size-1.5 rounded-full bg-emerald-500 sm:hidden" /> : null}</div>
-                {entry?.bookingId ? <Link aria-label={`Abrir reserva del ${day.dateKey}`} href={`/app/reservas/${entry.bookingId}`}>{content}</Link> : content}
+                {entry?.bookingId ? (
+                  <Link aria-label={`Abrir reserva del ${day.dateKey}`} href={`/app/reservas/${entry.bookingId}`}>{content}</Link>
+                ) : entry?.opportunityId ? (
+                  <Link aria-label={`Abrir oportunidad del ${day.dateKey}`} href={`/app/crm/${entry.opportunityId}`}>{content}</Link>
+                ) : content}
                 {available && calendar.canCreate ? (
                   <Link className="mt-2 hidden rounded-xl border border-dashed border-emerald-300 px-2 py-2 text-center text-[11px] font-medium text-emerald-800 hover:bg-emerald-50 sm:block" href={`/app/reservas/nueva?fecha=${day.dateKey}`}>Registrar</Link>
                 ) : null}
@@ -114,7 +119,7 @@ export default async function BookingCalendarPage({ searchParams }: { searchPara
 
       <section className="grid gap-3 md:grid-cols-3">
         <div className="flex gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs leading-5 text-emerald-950"><ShieldCheck className="mt-0.5 size-4 shrink-0" /><span><strong>Reservada:</strong> abono mínimo de S/500 verificado.</span></div>
-        <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-950"><Clock3 className="mt-0.5 size-4 shrink-0" /><span><strong>Hold:</strong> retención temporal de 24 horas.</span></div>
+        <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-950"><Clock3 className="mt-0.5 size-4 shrink-0" /><span><strong>Hold:</strong> retención automática de 24 horas al registrar el prospecto.</span></div>
         <div className="flex gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-xs leading-5 text-zinc-900"><LockKeyhole className="mt-0.5 size-4 shrink-0" /><span><strong>No disponible:</strong> bloqueo administrativo u operativo.</span></div>
       </section>
 

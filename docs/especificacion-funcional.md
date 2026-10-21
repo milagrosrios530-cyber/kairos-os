@@ -296,7 +296,7 @@ Crear, editar, buscar, filtrar, reasignar, exportar (solo autorizado), archivar 
 9. **Perdido:** motivo obligatorio (precio, fecha, competencia, sin respuesta, otro).
 10. **Descartado:** duplicado, consulta no calificada o fuera de servicio, con razón.
 
-**Nota de diseño:** los estados de **venta** nunca sustituyen los estados de **ocupación del calendario**. Una oportunidad puede estar negociándose mientras existe un hold temporal, pero “Cotización enviada” por sí mismo no bloquea la fecha.
+**Nota de diseño:** los estados de **venta** nunca sustituyen los estados de **ocupación del calendario**. Al registrar una oportunidad con fecha se crea, dentro de la misma transacción, un hold automático de 24 horas en `schedule_allocations`; si la fecha ya está ocupada, PostgreSQL rechaza el alta completa. La oportunidad puede seguir negociándose mientras el hold está activo, pero “Cotización enviada” por sí mismo no confirma la reserva.
 
 ## 7.3. Reglas de movimiento
 
@@ -384,7 +384,7 @@ El *tipo de evento* puede ir como insignia secundaria, sin reemplazar el color d
 
 ## 9.5. Ventana de hold y vigencia
 
-- El administrador define en configuración la duración permitida de un hold (propuesta inicial: 24 horas; **por aprobar**).
+- La duración aprobada del hold es 24 horas. El alta CRM con fecha lo crea automáticamente y una extensión posterior requiere autorización, motivo y auditoría.
 - El cron del sistema libera holds vencidos; **además**, todo intento nuevo de reservar ejecuta expiración de holds caducados dentro de la misma transacción antes de comprobar colisiones.
 - Una captura de depósito pendiente de validación NO habilita una retención infinita. Mantiene el vencimiento del hold salvo extensión autorizada.
 - Una extensión de hold registra autor, motivo, hora anterior y nueva fecha de vencimiento.
@@ -657,7 +657,7 @@ Cambiar capacidad, descuentos máximos, política de hold, servicios incluidos, 
 | `tasks` | `id`, `opportunity_id`, `assignee_id`, `due_at`, `status`, `type`, `result` | Seguimiento |
 | `visits` | `id`, `customer_id`, `opportunity_id`, `staff_id`, `start_at`, `end_at`, `status`, `notes` | Recorridos del local |
 | `bookings` | `id`, `venue_id`, `customer_id`, `opportunity_id`, `booking_code`, `status`, horarios, invitados, `quote_id`, responsables | Contrato/reserva |
-| `schedule_allocations` | `id`, `resource_id`, `booking_id` opcional, `allocation_kind`, intervalo, `blocking`, `hold_expires_at`, `release_reason` | **Fuente de disponibilidad** |
+| `schedule_allocations` | `id`, `resource_id`, `booking_id` opcional, `opportunity_id` opcional, `allocation_kind`, intervalo, `blocking`, `hold_expires_at`, `release_reason` | **Fuente de disponibilidad** para holds CRM y reservas |
 | `share_links` | `id`, `booking_id`, `token_hash`, `expires_at`, `revoked_at`, `scope`, `created_by` | Portal privado |
 | `audit_logs` | `id`, `actor_id`, `action`, `entity_type`, `entity_id`, `before_json`, `after_json`, `occurred_at`, `request_id` | Cambios sensibles |
 | `system_settings` | `organization_id`, `key`, `value_json`, `version`, `approved_by` | Políticas activas |

@@ -93,7 +93,8 @@ Avisos abiertos, no bloqueantes para staging:
 Implementado el 21 de octubre de 2026:
 
 - calendario mensual real y responsive con disponibilidad, holds, reservas confirmadas y bloqueos operativos;
-- máximo un evento bloqueante por salón y día, garantizado en PostgreSQL mediante rango temporal y exclusión GiST;
+- máximo un evento bloqueante por organización y día, garantizado en PostgreSQL mediante rango temporal y exclusión GiST;
+- alta CRM enlazada al calendario: registrar una oportunidad con fecha crea en la misma transacción un hold de 24 horas; si el día ya está ocupado, se revierte el alta y se devuelve un conflicto legible al ejecutivo;
 - creación de hold por 24 horas, idempotencia, expiración segura, liberación, prórroga administrativa, reprogramación y cancelación mediante transacciones;
 - registro append-only de evidencias de adelanto y revisión administrativa separada para aprobar o rechazar;
 - la fecha solo se confirma cuando un rol autorizado verifica un adelanto mínimo de S/500; el contrato se envía después y no retrasa el bloqueo;
@@ -108,14 +109,14 @@ Supabase remoto: cuatro migraciones de Hito 3 aplicadas (`booking_engine_hito3`,
 
 Evidencia de puerta:
 
-- `pnpm lint`, `pnpm typecheck`, `pnpm test` (64/64) y `pnpm build` pasan;
-- pgTAP remoto de flujo: 17/17 controles, incluida la colisión concurrente simulada que PostgreSQL rechaza con `23P01` y deja una sola asignación bloqueante;
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` (68/68) y `pnpm build` pasan;
+- pgTAP remoto de flujo: 20/20 controles, incluidos el hold automático al crear el prospecto, el rechazo `23P01` de una fecha ya ocupada y el rollback que conserva el hold original;
 - pgTAP remoto de seguridad: 24/24 controles de RLS, privilegios, acceso anónimo, funciones privadas y RPCs autorizadas;
 - smoke autenticado posterior al despliegue: se corrigieron los permisos `EXECUTE` de los dos helpers booleanos usados por las políticas RLS, la consulta bajo rol `authenticated` devolvió acceso válido y el calendario/listado/formulario cargaron desde la URL pública;
 - prueba funcional de pagos: S/15,500 genera adelanto S/500, saldo base S/15,000, vencimiento intermedio S/7,500 y pago final S/7,500;
 - las pruebas de base se ejecutaron dentro de transacciones con `ROLLBACK`; la comprobación posterior confirmó 0 clientes demo, 0 reservas de prueba y 0 asignaciones bloqueantes residuales.
 
-La oportunidad real de Ivon Artica Cuadrado continúa intacta y disponible para selección. No se creó ni confirmó una reserva automáticamente porque no existe una verificación independiente del adelanto de S/500.
+La oportunidad real de Ivon Artica Cuadrado continúa intacta. La asignación `074f6824-d822-4e69-a213-3d85c3a49210` representa su fecha del 12 de diciembre de 2026 como hold automático; la comprobación remota confirmó fecha bloqueada y ausencia de una reserva o pago falsamente confirmados.
 
 Avisos abiertos, no bloqueantes para staging:
 

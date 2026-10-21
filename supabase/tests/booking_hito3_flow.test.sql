@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(17);
+select plan(20);
 
 select set_config(
   'request.jwt.claim.sub',
@@ -65,7 +65,7 @@ with first_intake as (
       where organization_id = private.current_organization_id() and active
       order by sort_order limit 1
     ),
-    p_desired_date => date '2027-11-30',
+    p_desired_date => date '2027-12-01',
     p_guests_total => 80,
     p_modality => 'integral',
     p_source => 'otro',
@@ -80,6 +80,48 @@ select
   (first_intake.payload ->> 'opportunity_id')::uuid,
   (second_intake.payload ->> 'opportunity_id')::uuid
 from first_intake cross join second_intake;
+
+select is(
+  (
+    select allocation.local_date
+    from public.schedule_allocations as allocation
+    where allocation.opportunity_id = (
+      select first_opportunity_id from booking_flow_state
+    )
+      and allocation.booking_id is null
+      and allocation.kind = 'hold'
+      and allocation.blocking
+  ),
+  date '2027-11-30',
+  'CRM intake automatically creates a blocking 24-hour hold'
+);
+
+select throws_ok(
+  $$
+    select public.create_crm_intake_v2(
+      p_full_name => 'Cliente DEMO QA fecha ocupada',
+      p_phone_e164 => '+51933333333',
+      p_customer_type => 'persona',
+      p_assigned_to => auth.uid(),
+      p_event_type_id => (
+        select id from public.event_types
+        where organization_id = private.current_organization_id() and active
+        order by sort_order limit 1
+      ),
+      p_desired_date => date '2027-11-30',
+      p_guests_total => 60,
+      p_modality => 'integral',
+      p_source => 'otro',
+      p_customer => jsonb_build_object('preferred_contact_channel', 'whatsapp'),
+      p_opportunity => '{}'::jsonb,
+      p_service_interests => '[]'::jsonb,
+      p_idempotency_key => extensions.gen_random_uuid()
+    )
+  $$,
+  '23P01',
+  null,
+  'CRM intake rejects an already occupied event day atomically'
+);
 
 update booking_flow_state
 set first_booking_id = (
@@ -120,6 +162,20 @@ select throws_ok(
   '23P01',
   null,
   'database rejects a second blocking allocation for the same day'
+);
+
+select is(
+  (
+    select allocation.local_date
+    from public.schedule_allocations as allocation
+    where allocation.opportunity_id = (
+      select second_opportunity_id from booking_flow_state
+    )
+      and allocation.booking_id is null
+      and allocation.blocking
+  ),
+  date '2027-12-01',
+  'failed conversion preserves the second opportunity original hold'
 );
 
 update booking_flow_state

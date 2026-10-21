@@ -20,4 +20,4 @@ El alcance queda así:
 
 Propuestas y actividades son append-only. El DNI vive separado y se elimina de los payloads de auditoría. La UI muestra montos propuestos como referenciales y nunca como tarifas, ingresos o utilidad.
 
-En Hito 3, la disponibilidad deberá vivir en `schedule_allocations` y estar protegida por una exclusión GiST, transacciones, idempotencia y limpieza de holds vencidos. Esta entrega no simula esa funcionalidad.
+En Hito 3, la disponibilidad vive en `schedule_allocations` y está protegida por una exclusión GiST, transacciones, idempotencia y limpieza de holds vencidos. El alta CRM con fecha inserta allí un hold automático de 24 horas dentro de la misma transacción; una colisión revierte también el alta y devuelve conflicto al ejecutivo.

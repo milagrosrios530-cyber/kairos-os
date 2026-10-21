@@ -457,7 +457,7 @@ export function NewLeadForm({
         <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50/75 px-4 py-3">
           <p className="flex items-start gap-2 text-xs leading-5 text-amber-900 sm:text-sm">
             <ShieldAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-            Registrar esta consulta no ocupa la fecha. La disponibilidad y las reservas se controlan en el motor de calendario.
+            Al registrar, esta fecha quedará retenida automáticamente durante 24 horas. Si ya está ocupada, el sistema no guardará el registro y te pedirá elegir otro día.
           </p>
         </div>
       </FormSection>
