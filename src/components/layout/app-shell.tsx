@@ -2,6 +2,7 @@
 
 import {
   BriefcaseBusiness,
+  CalendarCheck2,
   CalendarRange,
   ChevronDown,
   ContactRound,
@@ -52,6 +53,8 @@ const navigation = [
   { href: "/app", label: "Inicio", icon: LayoutDashboard },
   { href: "/app/crm", label: "CRM", icon: BriefcaseBusiness, permission: "crm:view" as const },
   { href: "/app/agenda", label: "Agenda", icon: CalendarRange, permission: "crm:view" as const },
+  { href: "/app/calendario", label: "Calendario", icon: CalendarCheck2, permission: "calendar:view" as const },
+  { href: "/app/reservas", label: "Reservas", icon: CalendarRange, permission: "bookings:view" as const },
   { href: "/app/clientes", label: "Clientes", icon: ContactRound, permission: "crm:view" as const },
   { href: "/app/tareas", label: "Tareas", icon: ListChecks, permission: "tasks:view" as const },
   { href: "/app/visitas", label: "Visitas", icon: MapPinned, permission: "visits:view" as const },
@@ -68,6 +71,9 @@ const routeTitles: Record<string, string> = {
   "/app/crm": "CRM",
   "/app/crm/nueva": "Nueva oportunidad",
   "/app/agenda": "Agenda comercial",
+  "/app/calendario": "Calendario de reservas",
+  "/app/reservas": "Reservas",
+  "/app/reservas/nueva": "Retener fecha",
   "/app/clientes": "Clientes",
   "/app/clientes/nuevo": "Nuevo cliente",
   "/app/tareas": "Tareas",
@@ -277,6 +283,8 @@ export function AppShell({ viewer, children }: AppShellProps) {
       ? "Detalle de oportunidad"
       : pathname.startsWith("/app/clientes/")
         ? "Ficha del cliente"
+        : pathname.startsWith("/app/reservas/")
+          ? "Detalle de reserva"
         : "KAIROS OS");
 
   return (

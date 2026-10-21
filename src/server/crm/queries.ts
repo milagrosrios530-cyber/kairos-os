@@ -538,6 +538,7 @@ export async function getOpportunityDetail(opportunityId: string) {
     nextActionAt: opportunity.next_action_at,
     notes: opportunity.notes,
     updatedAt: opportunity.updated_at,
+    canCreate: hasPermission(viewer.roles, "bookings:create"),
     customer: customerResult.data
       ? {
           id: customerResult.data.id as string,

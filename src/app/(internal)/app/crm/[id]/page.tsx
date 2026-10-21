@@ -1,5 +1,6 @@
 import {
   ArrowLeft,
+  CalendarCheck2,
   CalendarDays,
   CircleDollarSign,
   Clock3,
@@ -70,7 +71,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
             <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] sm:text-[40px]">{opportunity.customer?.fullName ?? "Cliente autorizado"}</h1>
             <p className="mt-2 text-sm text-muted-foreground">{opportunity.eventType}{opportunity.occasionDetail ? ` · ${opportunity.occasionDetail}` : ""} · Asesor: {opportunity.adviserName}</p>
           </div>
-          {opportunity.customer ? <div className="flex flex-wrap gap-2"><Button render={<a href={`tel:${opportunity.customer.phone}`} />} variant="outline"><Phone aria-hidden="true" /> Llamar</Button>{opportunity.customer.email ? <Button render={<a href={`mailto:${opportunity.customer.email}`} />} variant="outline"><Mail aria-hidden="true" /> Correo</Button> : null}<Button render={<Link href={`/app/clientes/${opportunity.customer.id}`} />} variant="outline"><UserRound aria-hidden="true" /> Ver cliente</Button></div> : null}
+          {opportunity.customer ? <div className="flex flex-wrap gap-2">{opportunity.canCreate && !["ganado", "perdido", "descartado"].includes(opportunity.stage) ? <Button render={<Link href={{ pathname: "/app/reservas/nueva", query: { oportunidad: opportunity.id, fecha: opportunity.desiredDate ?? undefined } }} />}><CalendarCheck2 aria-hidden="true" /> Retener fecha</Button> : null}<Button render={<a href={`tel:${opportunity.customer.phone}`} />} variant="outline"><Phone aria-hidden="true" /> Llamar</Button>{opportunity.customer.email ? <Button render={<a href={`mailto:${opportunity.customer.email}`} />} variant="outline"><Mail aria-hidden="true" /> Correo</Button> : null}<Button render={<Link href={`/app/clientes/${opportunity.customer.id}`} />} variant="outline"><UserRound aria-hidden="true" /> Ver cliente</Button></div> : null}
         </div>
 
         <div className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

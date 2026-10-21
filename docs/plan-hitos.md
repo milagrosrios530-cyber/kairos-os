@@ -12,9 +12,9 @@ Supabase Auth por invitación, perfiles, roles, RLS, auditoría, protección de 
 
 Clientes, oportunidades, deduplicación orientativa, Kanban, actividades, tareas, visitas, búsqueda y dashboard básico. Puerta automatizada y de base remota aprobada; queda el smoke manual autenticado con `COMERCIAL` como control operativo.
 
-## Hito 3 Calendario y reservas
+## Hito 3 Calendario y reservas — completado
 
-Bookings, `schedule_allocations`, exclusión GiST, holds, expiración, idempotencia, confirmación, reprogramación y cancelación transaccional. Puerta: dos peticiones concurrentes dejan una sola asignación bloqueante.
+Bookings, `schedule_allocations`, exclusión GiST, holds, expiración, idempotencia, confirmación, reprogramación y cancelación transaccional. Puerta aprobada: PostgreSQL rechaza el segundo cruce con `23P01` y conserva una sola asignación bloqueante; 17/17 pruebas de flujo y 24/24 de seguridad pasan en Supabase remoto.
 
 ## Hito 4 Portales externos
 
@@ -32,4 +32,4 @@ Checklists, recursos, reportes, notificaciones, observabilidad, accesibilidad, p
 
 Dominio, secretos, alertas, maestros aprobados, usuarios reales, capacitación, rollback y soporte. No se promueve sin pruebas de permisos, disponibilidad y recuperación.
 
-No se inicia Hito 3 hasta presentar este cierre comprobable de Hito 2 y recibir aprobación explícita.
+No se inicia Hito 4 hasta presentar el cierre comprobable de Hito 3 y recibir aprobación explícita.

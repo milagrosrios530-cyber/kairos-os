@@ -434,9 +434,9 @@ La oportunidad se marca `Ganado` cuando exista una **reserva confirmada**. Una c
 
 ## 10.3. Confirmación de reserva
 
-**Precondiciones mínimas recomendadas**: cliente válido; disponibilidad verificada en transacción; fecha/horas y aforo consistente; cotización aprobada; abono exigible registrado y **verificado** (o excepción administrativa justificada); monto y responsable claros. Dirección indicó que, después de verificar los S/500, se envía el contrato con todos los detalles del programa; queda pendiente decidir si su aceptación es además una condición previa para pasar a `confirmed`.
+**Precondiciones aprobadas para el bloqueo comercial:** cliente válido; disponibilidad verificada en transacción; fecha y hora de inicio; importe contractual; responsable; y abono de al menos **S/500 registrado y verificado** por un rol autorizado. La verificación de los S/500 confirma la fecha; después se envía el contrato con todos los detalles del programa y su firma no retrasa el bloqueo ya confirmado.
 
-**Regla económica aprobada por Dirección el 20/10/2026:** el abono inicial para reservar es **S/500 verificados** y forma parte del total contratado. El saldo base se calcula como `total_contract_cents - 50000`; la cuota intermedia equivale al **50% del saldo base** y vence 15 días calendario antes del evento; el saldo final es el remanente después de todos los pagos verificados. Falta fijar si este último vence exactamente 1 o 2 horas antes del inicio. Esta regla define el calendario de cobro de cada contrato y **no constituye una tarifa oficial de servicios**.
+**Regla económica aprobada por Dirección el 20/10/2026:** el abono inicial para reservar es **S/500 verificados** y forma parte del total contratado. El saldo base se calcula como `total_contract_cents - 50000`; la cuota intermedia equivale al **50% del saldo base** y vence 15 días calendario antes del evento; el saldo final es el remanente después de todos los pagos verificados y vence **2 horas antes** del inicio. Si el contrato se confirma a menos de 15 días del evento, el abono de S/500 y esa cuota intermedia vencen inmediatamente. Esta regla define el calendario de cobro de cada contrato y **no constituye una tarifa oficial de servicios**.
 
 **Ejemplo aprobado:** para un contrato de S/15,500, el abono inicial de S/500 deja un saldo base de S/15,000; la cuota intermedia es S/7,500 y el saldo final es S/7,500. Todos los cálculos se almacenan en céntimos enteros y nunca con números de punto flotante.
 
@@ -522,7 +522,7 @@ Campos: `booking_id`, `amount_cents` (entero en céntimos), `currency=PEN`, `pai
 
 ## 12.2. Plan de pagos
 
-La regla activa aprobada es: S/500 verificados como abono inicial incluido en el total; luego 50% del saldo base (`total contractual - S/500`) con vencimiento 15 días calendario antes del evento; finalmente el remanente antes del inicio del evento. El sistema debe conservar importes y fechas pactadas por versión contractual, registrar cualquier excepción con motivo y autorización, y no reinterpretar este calendario como tarifa de servicios. El plazo exacto del pago final (1 o 2 horas antes) y la política para contratos celebrados a menos de 15 días del evento siguen pendientes de aprobación; no se debe generar una cuota retroactiva ni inventar una regla automática.
+La regla activa aprobada es: S/500 verificados como abono inicial incluido en el total; luego 50% del saldo base (`total contractual - S/500`) con vencimiento 15 días calendario antes del evento; finalmente el remanente 2 horas antes del inicio del evento. Si al confirmar faltan menos de 15 días, el abono inicial y la cuota intermedia vencen inmediatamente. El sistema debe conservar importes y fechas pactadas por versión contractual, registrar cualquier excepción con motivo y autorización, y no reinterpretar este calendario como tarifa de servicios.
 
 ## 12.3. Seguridad y trazabilidad financiera
 
@@ -1181,9 +1181,9 @@ kairos-os/
 |---|---|---|---|
 | D-01 | ¿El salón se vende a una sola celebración por fecha? | **Aprobado: máximo un evento por día completo** | Política de calendario |
 | D-02 | ¿Cuál es el horario válido de uso / hora máxima? | Parametrizable; 8 h es solo referencia del borrador | Cotización definitiva |
-| D-03 | ¿Cuánto dura un hold? | Sugerencia 24 h, pendiente | Automatización de holds |
+| D-03 | ¿Cuánto dura un hold? | **Aprobado: 24 horas** | Automatización de holds |
 | D-04 | ¿El cliente puede solicitar hold por web? | No; solo consulta pública | Portal |
-| D-05 | ¿Qué monto/documento confirma reserva? | Aprobado parcialmente: abono verificado de **S/500**, incluido en el total; saldo base = total - S/500; se paga 50% de ese saldo 15 días antes y el remanente antes del inicio. Tras verificar el abono se envía el contrato. Pendiente precisar si aceptar el contrato es condición adicional y si el pago final vence 1 o 2 horas antes | Cobros/confirmación |
+| D-05 | ¿Qué monto/documento confirma reserva? | **Aprobado:** S/500 verificados confirman la fecha y están incluidos en el total; contrato posterior sin retrasar el bloqueo; 50% del saldo base 15 días antes; remanente 2 horas antes; si faltan menos de 15 días, la cuota intermedia vence inmediatamente | Cobros/confirmación |
 | D-06 | ¿Cuáles precios intermedios se aprueban? | Ninguno activado por defecto | Cotizaciones oficiales |
 | D-07 | ¿Cuál es el stock exacto de mesas/sillas? | Por inventariar | Validación final mobiliario |
 | D-08 | ¿Cuál es aforo legal autorizado por formato? | Sin cifra legal registrada por defecto | Promesas de aforo |

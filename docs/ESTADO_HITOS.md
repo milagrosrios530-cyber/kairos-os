@@ -88,6 +88,42 @@ Avisos abiertos, no bloqueantes para staging:
 - el asesor de rendimiento marca índices nuevos como no usados y algunas claves foráneas compuestas como no totalmente cubiertas; se medirán con tráfico antes de añadir índices que encarezcan cada escritura;
 - falta una prueba manual autenticada en la interfaz desplegada con una cuenta `COMERCIAL` real.
 
-## Hitos 3 a 7
+## Hito 3
 
-No iniciados. La nueva agenda es una vista comercial y la fecha solicitada del CRM sigue siendo tentativa: no bloquea el salón ni confirma una reserva. El calendario de disponibilidad real con exclusión PostgreSQL, transacciones, holds y protección contra doble reserva pertenece al Hito 3 y requiere aprobación explícita para comenzar.
+Implementado el 21 de octubre de 2026:
+
+- calendario mensual real y responsive con disponibilidad, holds, reservas confirmadas y bloqueos operativos;
+- máximo un evento bloqueante por salón y día, garantizado en PostgreSQL mediante rango temporal y exclusión GiST;
+- creación de hold por 24 horas, idempotencia, expiración segura, liberación, prórroga administrativa, reprogramación y cancelación mediante transacciones;
+- registro append-only de evidencias de adelanto y revisión administrativa separada para aprobar o rechazar;
+- la fecha solo se confirma cuando un rol autorizado verifica un adelanto mínimo de S/500; el contrato se envía después y no retrasa el bloqueo;
+- S/500 se descuenta del total contractual. El 50% del saldo restante vence 15 días antes y el remanente dos horas antes del evento; si faltan menos de 15 días, el adelanto y el 50% del saldo restante vencen inmediatamente;
+- el monto propuesto del CRM permanece referencial y nunca se convierte automáticamente en tarifa ni total contractual;
+- privacidad por alcance: los ejecutivos ven ocupación general del calendario, pero solo el detalle de sus propias reservas; administración conserva alcance global;
+- validación y autorización repetidas en servidor y dentro de cada RPC; tablas expuestas con RLS forzada y sin escrituras directas;
+- auditoría de creación, confirmación, rechazo de evidencia, liberación, prórroga, reprogramación, cancelación y bloqueos operativos;
+- accesos desde el CRM, listado de reservas, ficha operativa y flujo de alta simplificado.
+
+Supabase remoto: cuatro migraciones de Hito 3 aplicadas (`booking_engine_hito3`, `booking_engine_indexes`, `booking_management_actions` y `booking_deposit_rejection`). No se cargaron fixtures ni reservas demo.
+
+Evidencia de puerta:
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` (64/64) y `pnpm build` pasan;
+- pgTAP remoto de flujo: 17/17 controles, incluida la colisión concurrente simulada que PostgreSQL rechaza con `23P01` y deja una sola asignación bloqueante;
+- pgTAP remoto de seguridad: 24/24 controles de RLS, privilegios, acceso anónimo, funciones privadas y RPCs autorizadas;
+- prueba funcional de pagos: S/15,500 genera adelanto S/500, saldo base S/15,000, vencimiento intermedio S/7,500 y pago final S/7,500;
+- las pruebas de base se ejecutaron dentro de transacciones con `ROLLBACK`; la comprobación posterior confirmó 0 clientes demo, 0 reservas de prueba y 0 asignaciones bloqueantes residuales.
+
+La oportunidad real de Ivon Artica Cuadrado continúa intacta y disponible para selección. No se creó ni confirmó una reserva automáticamente porque no existe una verificación independiente del adelanto de S/500.
+
+Avisos abiertos, no bloqueantes para staging:
+
+- las RPCs transaccionales son `SECURITY DEFINER` por diseño y validan sesión, organización, rol y alcance antes de mutar datos;
+- la limpieza física periódica de holds vencidos queda para operación programada; la disponibilidad y toda escritura crítica los consideran vencidos inmediatamente, y cada transacción de reserva limpia los holds obsoletos antes de bloquear una fecha;
+- falta el smoke manual autenticado con una cuenta `COMERCIAL` real;
+- la generación, envío, firma y almacenamiento privado del contrato pertenecen al Hito 5; Hito 3 registra la confirmación de fecha y muestra ese paso como pendiente;
+- la protección de contraseñas filtradas de Supabase Auth continúa desactivada.
+
+## Hitos 4 a 7
+
+No iniciados. Requieren el resumen comprobable de este hito y aprobación explícita antes de avanzar.

@@ -6,9 +6,9 @@ Estado al 20 de octubre de 2026. Ningún valor provisional se considera polític
 |---|---|---|---|---|
 | D-01 | Exclusividad por fecha | Aprobado: máximo un evento por día completo | Aprobada 20/10/2026 | — |
 | D-02 | Horario máximo y duración | Parametrizable | Pendiente | Cotización |
-| D-03 | Duración de hold | Sin valor activo | Pendiente | Hito 3 |
+| D-03 | Duración de hold | Aprobado: 24 horas | Aprobada 20/10/2026 | — |
 | D-04 | Hold solicitado por web | Desactivado | Pendiente | Hito 4 |
-| D-05 | Condiciones para confirmar | Aprobado parcialmente: abono verificado de S/500, incluido en el total. Saldo base = total contractual - S/500; se paga 50% de ese saldo 15 días antes y el resto antes de iniciar el evento. Tras verificar los S/500 se envía el contrato con el programa. Falta precisar si la aceptación del contrato es requisito adicional y si el saldo final vence 1 o 2 horas antes | Parcial 20/10/2026 | Hito 3 |
+| D-05 | Condiciones para confirmar | Aprobado: S/500 verificados confirman la fecha y están incluidos en el total; el contrato se envía después y su firma no retrasa el bloqueo. Saldo base = total - S/500; 50% de ese saldo vence 15 días antes y el remanente 2 horas antes. Si faltan menos de 15 días, S/500 + 50% del saldo base vencen inmediatamente | Aprobada 20/10/2026 | — |
 | D-06 | Tarifas aprobadas | Ninguna cargada | Pendiente | Hito 5 |
 | D-07 | Stock de mobiliario | Sin inventario | Pendiente | Hito 5 |
 | D-08 | Aforo legal | `capacity_authorized = null` | Pendiente | Promesas de capacidad |
@@ -26,4 +26,4 @@ Estado al 20 de octubre de 2026. Ningún valor provisional se considera polític
 | D-20 | Límite y MIME permitidos para adjuntos | Sin valor impuesto al proyecto remoto | Pendiente técnica | Módulos con archivos |
 | D-21 | Dominio y proveedor de correo corporativo | KAIROS crea la cuenta de acceso, no el buzón externo | Pendiente | Altas con correo corporativo real |
 
-Hito 2 está implementado sin activar precios, aforo ni disponibilidad de reservas. La agenda mensual añadida es exclusivamente comercial. D-01 ya está aprobada. Para iniciar Hito 3 faltan la duración del hold (D-03) y cerrar las dos precisiones restantes de D-05: si la aceptación del contrato también es obligatoria para confirmar y si el saldo final vence 1 o 2 horas antes del inicio.
+Hito 2 está implementado sin activar precios, aforo ni disponibilidad de reservas. La agenda mensual añadida es exclusivamente comercial. D-01, D-03 y D-05 están aprobadas y habilitan el inicio del Hito 3.

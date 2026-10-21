@@ -15,6 +15,10 @@ export const PERMISSIONS = [
   "visits:view",
   "visits:create",
   "dashboard:view_global",
+  "calendar:view",
+  "bookings:view",
+  "bookings:create",
+  "bookings:manage",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -34,6 +38,10 @@ const ROLE_PERMISSIONS: Record<AppRole, readonly Permission[]> = {
     "visits:view",
     "visits:create",
     "dashboard:view_global",
+    "calendar:view",
+    "bookings:view",
+    "bookings:create",
+    "bookings:manage",
   ],
   COMERCIAL: [
     "app:view",
@@ -43,10 +51,13 @@ const ROLE_PERMISSIONS: Record<AppRole, readonly Permission[]> = {
     "tasks:create",
     "visits:view",
     "visits:create",
+    "calendar:view",
+    "bookings:view",
+    "bookings:create",
   ],
-  COORDINADOR: ["app:view"],
-  FINANZAS: ["app:view"],
-  CONSULTA: ["app:view"],
+  COORDINADOR: ["app:view", "calendar:view", "bookings:view"],
+  FINANZAS: ["app:view", "calendar:view", "bookings:view"],
+  CONSULTA: ["app:view", "calendar:view"],
 };
 
 export function hasPermission(

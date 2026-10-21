@@ -1,4 +1,4 @@
-# Pruebas de aceptación hasta Hito 2
+# Pruebas de aceptación hasta Hito 3
 
 ## Automatizadas
 
@@ -10,6 +10,10 @@
 - SQL Hito 2: 58 aserciones sobre tablas, RLS, ausencia de acceso anónimo, ausencia de escritura directa, RPCs guardadas, FKs, append-only, auditoría sanitizada y concurrencia optimista.
 - Flujo remoto Hito 2: 9 aserciones transaccionales con `ROLLBACK`, sin dejar fixtures.
 - Agenda y pipeline: cuadrícula mensual, límites de mes, etapas válidas, motivos obligatorios al cerrar y bloqueo técnico de `Ganado` sin reserva.
+- Reservas: validación de oportunidad, salón, fecha, horario, total contractual, comprobante, reprogramación, cancelación, prórroga y bloqueo operativo.
+- SQL Hito 3: 24 aserciones de seguridad y privilegios, más 17 aserciones funcionales con transacción y `ROLLBACK`.
+- Concurrencia Hito 3: una segunda asignación bloqueante para el mismo salón y día falla por la exclusión GiST de PostgreSQL con código `23P01`.
+- Pagos Hito 3: el adelanto verificado mínimo de S/500 confirma la fecha, se incluye en el total y calcula el 50% del saldo restante y el pago final sin convertir una propuesta CRM en tarifa.
 
 ## En staging
 
@@ -36,3 +40,20 @@
 10. Abrir el alta de prospecto y comprobar que solo nombre, teléfono, tipo de evento, fecha e invitados son esenciales; los demás campos deben seguir disponibles en secciones opcionales.
 
 La puerta automatizada y remota de Hito 2 está aprobada. El smoke autenticado en navegador con una cuenta comercial real permanece como verificación operativa, no como sustituto de los controles de base ya ejecutados.
+
+## En staging — Hito 3
+
+1. Abrir `/app/calendario`, cambiar de mes y comprobar que los días disponibles, holds, reservas y bloqueos se distinguen sin exponer datos de clientes ajenos.
+2. Desde una oportunidad abierta, pulsar `Retener fecha`, ingresar un total contractual explícito y crear el hold; debe vencer 24 horas después.
+3. Intentar reservar el mismo salón y día desde otra oportunidad; debe devolver conflicto y conservar una sola asignación bloqueante.
+4. Registrar una evidencia inferior a S/500 o pendiente: la fecha no debe confirmarse.
+5. Registrar S/500 y aprobar la evidencia como administrador: la reserva debe quedar confirmada, la oportunidad debe pasar a `Ganado` y la agenda debe seguir bloqueada.
+6. Verificar que un total de S/15,500 muestre S/500 pagados, S/7,500 a los 15 días previos y S/7,500 dos horas antes del evento.
+7. Rechazar una evidencia con motivo y comprobar que la historia permanece visible sin reducir saldo.
+8. Liberar un hold con motivo, crear uno nuevo en esa fecha y comprobar la auditoría de ambos cambios.
+9. Reprogramar una reserva confirmada a una fecha libre e intentar moverla a una ocupada; el segundo caso debe fallar sin perder la fecha original.
+10. Como `COMERCIAL`, confirmar que se ve la ocupación de todo el mes pero no los datos personales ni el detalle de reservas de otros asesores.
+11. Como administrador, crear y luego liberar un bloqueo operativo con motivo; no debe eliminarse físicamente la historia.
+12. Dejar vencer un hold y confirmar que el calendario lo trata como disponible y que la siguiente transacción limpia el bloqueo obsoleto antes de reservar.
+
+La puerta automatizada y remota de Hito 3 está aprobada. Permanecen como verificaciones operativas el smoke autenticado con una cuenta comercial real y la programación de limpieza física periódica de holds; ninguna de ellas sustituye la exclusión y expiración efectiva ya aplicada en PostgreSQL.
