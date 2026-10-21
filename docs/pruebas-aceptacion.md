@@ -12,6 +12,7 @@
 - Agenda y pipeline: cuadrícula mensual, límites de mes, etapas válidas, motivos obligatorios al cerrar y bloqueo técnico de `Ganado` sin reserva.
 - Reservas: validación de oportunidad, salón, fecha, horario, total contractual, comprobante, reprogramación, cancelación, prórroga y bloqueo operativo.
 - SQL Hito 3: 24 aserciones de seguridad y privilegios, más 17 aserciones funcionales con transacción y `ROLLBACK`.
+- Despliegue Hito 3: smoke autenticado con `SUPERADMIN` sobre Calendario, Reservas y el alta simplificada; la política RLS se evaluó además bajo el rol real `authenticated` y devolvió acceso sin elevar privilegios de escritura.
 - Concurrencia Hito 3: una segunda asignación bloqueante para el mismo salón y día falla por la exclusión GiST de PostgreSQL con código `23P01`.
 - Pagos Hito 3: el adelanto verificado mínimo de S/500 confirma la fecha, se incluye en el total y calcula el 50% del saldo restante y el pago final sin convertir una propuesta CRM en tarifa.
 

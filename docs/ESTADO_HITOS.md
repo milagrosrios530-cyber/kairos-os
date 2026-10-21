@@ -111,6 +111,7 @@ Evidencia de puerta:
 - `pnpm lint`, `pnpm typecheck`, `pnpm test` (64/64) y `pnpm build` pasan;
 - pgTAP remoto de flujo: 17/17 controles, incluida la colisión concurrente simulada que PostgreSQL rechaza con `23P01` y deja una sola asignación bloqueante;
 - pgTAP remoto de seguridad: 24/24 controles de RLS, privilegios, acceso anónimo, funciones privadas y RPCs autorizadas;
+- smoke autenticado posterior al despliegue: se corrigieron los permisos `EXECUTE` de los dos helpers booleanos usados por las políticas RLS, la consulta bajo rol `authenticated` devolvió acceso válido y el calendario/listado/formulario cargaron desde la URL pública;
 - prueba funcional de pagos: S/15,500 genera adelanto S/500, saldo base S/15,000, vencimiento intermedio S/7,500 y pago final S/7,500;
 - las pruebas de base se ejecutaron dentro de transacciones con `ROLLBACK`; la comprobación posterior confirmó 0 clientes demo, 0 reservas de prueba y 0 asignaciones bloqueantes residuales.
 
@@ -120,7 +121,7 @@ Avisos abiertos, no bloqueantes para staging:
 
 - las RPCs transaccionales son `SECURITY DEFINER` por diseño y validan sesión, organización, rol y alcance antes de mutar datos;
 - la limpieza física periódica de holds vencidos queda para operación programada; la disponibilidad y toda escritura crítica los consideran vencidos inmediatamente, y cada transacción de reserva limpia los holds obsoletos antes de bloquear una fecha;
-- falta el smoke manual autenticado con una cuenta `COMERCIAL` real;
+- falta el smoke manual autenticado con una cuenta `COMERCIAL` real; el smoke con `SUPERADMIN` ya pasó;
 - la generación, envío, firma y almacenamiento privado del contrato pertenecen al Hito 5; Hito 3 registra la confirmación de fecha y muestra ese paso como pendiente;
 - la protección de contraseñas filtradas de Supabase Auth continúa desactivada.
 

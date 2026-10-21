@@ -11,6 +11,15 @@ const migration = readFileSync(
   ),
   "utf8",
 ).toLowerCase();
+const rlsHelperGrantMigration = readFileSync(
+  join(
+    process.cwd(),
+    "supabase",
+    "migrations",
+    "20261021103000_booking_rls_helper_grants.sql",
+  ),
+  "utf8",
+).toLowerCase();
 
 describe("booking engine migration contract", () => {
   it.each(["bookings", "schedule_allocations", "booking_deposit_records"])(
@@ -44,5 +53,15 @@ describe("booking engine migration contract", () => {
     const pinned = migration.match(/set search_path = ''/g) ?? [];
     expect(privileged.length).toBeGreaterThan(0);
     expect(pinned.length).toBeGreaterThanOrEqual(privileged.length);
+  });
+
+  it("allows authenticated RLS evaluation without exposing mutating helpers", () => {
+    expect(rlsHelperGrantMigration).toContain(
+      "grant execute on function private.can_view_booking_calendar(uuid)",
+    );
+    expect(rlsHelperGrantMigration).toContain(
+      "grant execute on function private.can_access_booking(uuid)",
+    );
+    expect(rlsHelperGrantMigration).not.toContain("expire_stale_booking_holds");
   });
 });

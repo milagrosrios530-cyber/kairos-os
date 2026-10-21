@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(24);
+select plan(26);
 
 select ok(to_regclass('public.bookings') is not null, 'bookings exists');
 select ok(to_regclass('public.schedule_allocations') is not null, 'allocations exists');
@@ -54,6 +54,23 @@ select ok(
     'EXECUTE'
   ),
   'clients cannot call private expiry helper'
+);
+
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'private.can_view_booking_calendar(uuid)',
+    'EXECUTE'
+  ),
+  'authenticated can evaluate the calendar RLS helper'
+);
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'private.can_access_booking(uuid)',
+    'EXECUTE'
+  ),
+  'authenticated can evaluate the booking RLS helper'
 );
 
 select * from finish();
