@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { VISIT_STATUSES } from "@/lib/crm/constants";
 import { setCrmVisitStatus } from "@/server/crm/mutations";
+import { requirePermission } from "@/server/auth/session";
 import {
   apiErrorResponse,
   invalidJsonResponse,
@@ -43,6 +44,7 @@ export async function PATCH(
 ) {
   const requestId = crypto.randomUUID();
   try {
+    await requirePermission("visits:create");
     let body: unknown;
     try {
       body = await request.json();

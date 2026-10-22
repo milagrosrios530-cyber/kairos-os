@@ -29,6 +29,7 @@ type TaskFormProps = {
   className?: string;
   onSaved?: () => void;
   opportunityId: string;
+  timezone: string;
 };
 
 export function TaskForm({
@@ -37,6 +38,7 @@ export function TaskForm({
   className,
   onSaved,
   opportunityId,
+  timezone,
 }: TaskFormProps) {
   const router = useRouter();
   const idempotencyKey = useRef<string | null>(null);
@@ -61,7 +63,7 @@ export function TaskForm({
             type: form.get("type"),
             title: form.get("title"),
             description: optionalText(form.get("description")),
-            dueAt: localDateTimeToIso(form.get("dueAt")),
+            dueAt: localDateTimeToIso(form.get("dueAt"), timezone),
             priority: form.get("priority"),
             assigneeId: canAssign ? optionalText(form.get("assigneeId")) : undefined,
             idempotencyKey: idempotencyKey.current,

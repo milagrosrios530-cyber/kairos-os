@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { confirmBookingSchema } from "@/lib/validation/bookings";
 import { confirmBooking } from "@/server/bookings/mutations";
+import { requirePermission } from "@/server/auth/session";
 import {
   apiErrorResponse,
   invalidJsonResponse,
@@ -12,6 +13,7 @@ import {
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const requestId = crypto.randomUUID();
   try {
+    await requirePermission("bookings:manage");
     let body: unknown;
     try { body = await request.json(); } catch { return invalidJsonResponse(requestId); }
     const payload = confirmBookingSchema.safeParse(body);

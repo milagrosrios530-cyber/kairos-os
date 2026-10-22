@@ -2,7 +2,7 @@
 
 import { Ban, LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { apiErrorMessage, readApiBody, type FormNotice } from "@/components/crm/api-form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -14,12 +14,14 @@ import { Textarea } from "@/components/ui/textarea";
 
 export function BlackoutForm({ venues }: { venues: Array<{ id: string; name: string }> }) {
   const router = useRouter();
+  const idempotencyKey = useRef<string | null>(null);
   const [pending, setPending] = useState(false);
   const [notice, setNotice] = useState<FormNotice | null>(null);
 
   async function submit(formData: FormData) {
     setPending(true);
     setNotice(null);
+    idempotencyKey.current ??= crypto.randomUUID();
     try {
       const response = await fetch("/api/calendar/blackouts", {
         method: "POST",
@@ -28,18 +30,20 @@ export function BlackoutForm({ venues }: { venues: Array<{ id: string; name: str
           venueId: String(formData.get("venueId") ?? ""),
           eventDate: String(formData.get("eventDate") ?? ""),
           reason: String(formData.get("reason") ?? ""),
-          idempotencyKey: crypto.randomUUID(),
+          idempotencyKey: idempotencyKey.current,
         }),
       });
       const body = await readApiBody(response);
       if (!response.ok) {
+        idempotencyKey.current = null;
         setNotice({ kind: "error", text: apiErrorMessage(body) });
         return;
       }
       setNotice({ kind: "success", text: "Fecha bloqueada y protegida contra reservas." });
+      idempotencyKey.current = null;
       router.refresh();
     } catch {
-      setNotice({ kind: "error", text: "No se pudo conectar con el servidor." });
+      setNotice({ kind: "error", text: "La conexión se interrumpió. Puedes reintentar sin duplicar el bloqueo." });
     } finally {
       setPending(false);
     }

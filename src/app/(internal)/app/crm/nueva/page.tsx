@@ -37,6 +37,7 @@ export default async function NewCrmLeadPage({ searchParams }: { searchParams: S
         canAssign={options.canAssign}
         eventTypes={options.eventTypes.map((eventType) => ({ id: eventType.id, name: eventType.name }))}
         initialDesiredDate={initialDesiredDate}
+        timezone={options.timezone}
       />
     </div>
   );

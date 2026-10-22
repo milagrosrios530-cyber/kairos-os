@@ -8,6 +8,7 @@ import {
   validationErrorResponse,
 } from "@/server/http/api-response";
 import { createOpportunityActivity } from "@/server/crm/mutations";
+import { requirePermission } from "@/server/auth/session";
 
 const payloadSchema = z.strictObject({
   kind: z.enum(CRM_ACTIVITY_KINDS),
@@ -22,6 +23,7 @@ export async function POST(
 ) {
   const requestId = crypto.randomUUID();
   try {
+    await requirePermission("crm:create");
     let body: unknown;
     try {
       body = await request.json();

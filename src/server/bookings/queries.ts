@@ -52,6 +52,8 @@ type OpportunityCalendarRow = {
   occasion_detail: string | null;
 };
 
+const BOOKING_PAGE_SIZE = 25;
+
 function unique(values: Array<string | null | undefined>) {
   return [...new Set(values.filter((value): value is string => Boolean(value)))];
 }
@@ -268,13 +270,12 @@ export async function getBookingFormOptions() {
       .eq("organization_id", viewer.organizationId)
       .is("archived_at", null)
       .not("pipeline_status", "in", "(ganado,perdido,descartado)")
-      .order("updated_at", { ascending: false })
-      .limit(200),
+      .order("updated_at", { ascending: false }),
     supabase
       .from("bookings")
       .select("opportunity_id")
       .eq("organization_id", viewer.organizationId)
-      .in("status", ["held", "pending_verification", "confirmed"]),
+      .in("status", ["held", "pending_verification"]),
   ]);
 
   if (venuesResult.error || opportunitiesResult.error || activeBookingsResult.error) {
@@ -328,19 +329,47 @@ export async function getBookingFormOptions() {
   };
 }
 
-export async function listBookings() {
-  const viewer = await requirePermission("bookings:view");
+export async function getBookingVenueOptions() {
+  const viewer = await requirePermission("bookings:manage");
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("bookings")
-    .select("id, booking_code, venue_id, customer_id, opportunity_id, event_type_id, event_date, event_start_time, event_end_time, guest_count, assigned_to, total_contract_cents, deposit_verified_cents, balance_after_initial_cents, intermediate_due_cents, intermediate_due_date, final_scheduled_cents, final_due_at, status, hold_expires_at, confirmed_at, internal_notes, created_at, updated_at")
+    .from("venues")
+    .select("id, name")
     .eq("organization_id", viewer.organizationId)
-    .order("event_date", { ascending: true })
-    .limit(200);
+    .eq("active", true)
+    .eq("exclusive_day_policy", true)
+    .order("name");
+  if (error) {
+    throw new ApplicationError(
+      "BOOKING_VENUES_FAILED",
+      500,
+      "No se pudieron consultar los salones.",
+    );
+  }
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    name: row.name as string,
+  }));
+}
+
+export async function listBookings(options: { page?: number } = {}) {
+  const viewer = await requirePermission("bookings:view");
+  const supabase = await createClient();
+  const page = Number.isInteger(options.page) && (options.page ?? 0) > 0
+    ? (options.page as number)
+    : 1;
+  const from = (page - 1) * BOOKING_PAGE_SIZE;
+  const { data, error, count } = await supabase
+    .from("bookings")
+    .select("id, booking_code, venue_id, customer_id, opportunity_id, event_type_id, event_date, event_start_time, event_end_time, guest_count, assigned_to, total_contract_cents, deposit_verified_cents, balance_after_initial_cents, intermediate_due_cents, intermediate_due_date, final_scheduled_cents, final_due_at, status, hold_expires_at, confirmed_at, internal_notes, created_at, updated_at", { count: "exact" })
+    .eq("organization_id", viewer.organizationId)
+    .order("event_date", { ascending: false })
+    .range(from, from + BOOKING_PAGE_SIZE - 1);
   if (error) throw new ApplicationError("BOOKING_LIST_FAILED", 500, "No se pudieron consultar las reservas.");
   const bookings = (data ?? []) as BookingRow[];
   const maps = await bookingNameMaps(viewer.organizationId, bookings);
-  return bookings.map((booking) => ({
+  return {
+    items: bookings.map((booking) => ({
     id: booking.id,
     code: booking.booking_code,
     customerName: maps.customers.get(booking.customer_id) ?? "Cliente autorizado",
@@ -352,7 +381,11 @@ export async function listBookings() {
     status: booking.status,
     holdExpiresAt: booking.hold_expires_at,
     totalContractCents: booking.total_contract_cents,
-  }));
+    })),
+    page,
+    pageSize: BOOKING_PAGE_SIZE,
+    total: count ?? 0,
+  };
 }
 
 export async function getBookingDetail(bookingId: string) {

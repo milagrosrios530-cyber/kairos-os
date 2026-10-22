@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { PIPELINE_STATUSES } from "@/lib/crm/constants";
 import { transitionOpportunity } from "@/server/crm/mutations";
+import { requirePermission } from "@/server/auth/session";
 import {
   apiErrorResponse,
   invalidJsonResponse,
@@ -42,6 +43,7 @@ export async function PATCH(
 ) {
   const requestId = crypto.randomUUID();
   try {
+    await requirePermission("crm:create");
     let body: unknown;
     try {
       body = await request.json();

@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { VISIT_MODALITIES } from "@/lib/crm/constants";
 import { createOpportunityVisit } from "@/server/crm/mutations";
+import { requirePermission } from "@/server/auth/session";
 import {
   apiErrorResponse,
   invalidJsonResponse,
@@ -30,6 +31,7 @@ export async function POST(
 ) {
   const requestId = crypto.randomUUID();
   try {
+    await requirePermission("visits:create");
     let body: unknown;
     try {
       body = await request.json();

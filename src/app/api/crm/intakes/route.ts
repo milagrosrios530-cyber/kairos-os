@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { crmIntakeRequestSchema } from "@/lib/validation/crm";
 import { createCrmIntake } from "@/server/crm/mutations";
+import { requirePermission } from "@/server/auth/session";
 import {
   apiErrorResponse,
   invalidJsonResponse,
@@ -12,6 +13,7 @@ export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
 
   try {
+    await requirePermission("crm:create");
     let body: unknown;
     try {
       body = await request.json();

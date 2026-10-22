@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getPublicEnv, hasSupabasePublicEnv } from "@/lib/env";
+import { fetchWithSupabaseTimeout } from "@/lib/supabase/fetch-with-timeout";
 
 function copySessionHeaders(source: NextResponse, target: NextResponse) {
   source.cookies.getAll().forEach((cookie) => target.cookies.set(cookie));
@@ -21,6 +22,7 @@ export async function updateSession(request: NextRequest) {
     env.NEXT_PUBLIC_SUPABASE_URL,
     env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     {
+      global: { fetch: fetchWithSupabaseTimeout },
       cookies: {
         getAll() {
           return request.cookies.getAll();

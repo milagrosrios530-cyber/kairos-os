@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { bookingReasonSchema } from "@/lib/validation/bookings";
 import { rejectBookingDeposit } from "@/server/bookings/mutations";
+import { requirePermission } from "@/server/auth/session";
 import {
   apiErrorResponse,
   invalidJsonResponse,
@@ -15,6 +16,7 @@ export async function POST(
 ) {
   const requestId = crypto.randomUUID();
   try {
+    await requirePermission("bookings:manage");
     let body: unknown;
     try { body = await request.json(); } catch { return invalidJsonResponse(requestId); }
     const payload = bookingReasonSchema.safeParse(body);

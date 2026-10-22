@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { createBlackoutSchema } from "@/lib/validation/bookings";
 import { createCalendarBlackout } from "@/server/bookings/mutations";
+import { requirePermission } from "@/server/auth/session";
 import {
   apiErrorResponse,
   invalidJsonResponse,
@@ -11,6 +12,7 @@ import {
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
   try {
+    await requirePermission("bookings:manage");
     let body: unknown;
     try { body = await request.json(); } catch { return invalidJsonResponse(requestId); }
     const payload = createBlackoutSchema.safeParse(body);

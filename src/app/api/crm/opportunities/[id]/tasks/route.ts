@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { TASK_PRIORITIES, TASK_TYPES } from "@/lib/crm/constants";
 import { createOpportunityTask } from "@/server/crm/mutations";
+import { requirePermission } from "@/server/auth/session";
 import {
   apiErrorResponse,
   invalidJsonResponse,
@@ -25,6 +26,7 @@ export async function POST(
 ) {
   const requestId = crypto.randomUUID();
   try {
+    await requirePermission("tasks:create");
     let body: unknown;
     try {
       body = await request.json();

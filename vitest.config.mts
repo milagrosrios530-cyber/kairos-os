@@ -13,7 +13,11 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary"],
-      include: ["src/lib/auth/**/*.ts", "src/lib/validation/**/*.ts"],
+      include: [
+        "src/lib/auth/**/*.ts",
+        "src/lib/dates/**/*.ts",
+        "src/lib/validation/**/*.ts",
+      ],
     },
   },
 });

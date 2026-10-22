@@ -40,14 +40,27 @@ const paymentMethodLabels: Record<string, string> = {
   otro: "Otro",
 };
 
-async function postJson(url: string, payload: Record<string, unknown>) {
+class ApiRequestError extends Error {
+  readonly retryable: boolean;
+
+  constructor(message: string, retryable: boolean) {
+    super(message);
+    this.retryable = retryable;
+  }
+}
+
+async function postJson(
+  url: string,
+  payload: Record<string, unknown>,
+  idempotencyKey: string,
+) {
   const response = await fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ ...payload, idempotencyKey: crypto.randomUUID() }),
+    body: JSON.stringify({ ...payload, idempotencyKey }),
   });
   const body = await readApiBody(response);
-  if (!response.ok) throw new Error(apiErrorMessage(body));
+  if (!response.ok) throw new ApiRequestError(apiErrorMessage(body), false);
   return body;
 }
 
@@ -71,6 +84,7 @@ export function BookingActions({
   eventEndTime: string | null;
 }) {
   const router = useRouter();
+  const [idempotencyKeys] = useState(() => new Map<string, string>());
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<FormNotice | null>(null);
   const activeHold = ["held", "pending_verification"].includes(status);
@@ -79,11 +93,17 @@ export function BookingActions({
   async function run(key: string, url: string, payload: Record<string, unknown>, success: string) {
     setBusy(key);
     setNotice(null);
+    const idempotencyKey = idempotencyKeys.get(key) ?? crypto.randomUUID();
+    idempotencyKeys.set(key, idempotencyKey);
     try {
-      await postJson(url, payload);
+      await postJson(url, payload, idempotencyKey);
+      idempotencyKeys.delete(key);
       setNotice({ kind: "success", text: success });
       router.refresh();
     } catch (error) {
+      if (error instanceof ApiRequestError && !error.retryable) {
+        idempotencyKeys.delete(key);
+      }
       setNotice({
         kind: "error",
         text: error instanceof Error ? error.message : "No se pudo completar la operación.",

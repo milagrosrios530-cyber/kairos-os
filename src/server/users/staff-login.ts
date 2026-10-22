@@ -1,7 +1,10 @@
 import "server-only";
 
+import { createHmac } from "node:crypto";
+
 import type { AppRole } from "@/lib/auth/roles";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getStaffLoginSecret } from "@/lib/server-env";
 import { requirePermission } from "@/server/auth/session";
 import { ApplicationError, AuthorizationError } from "@/server/errors";
 
@@ -21,14 +24,40 @@ const ADMIN_CREATABLE_ROLES: readonly AppRole[] = [
   "CONSULTA",
 ];
 
-export async function resolveStaffLoginEmail(identifier: string) {
+function secureLookupHash(value: string) {
+  return createHmac("sha256", getStaffLoginSecret())
+    .update(value)
+    .digest("hex");
+}
+
+async function consumeLoginAttempt(key: string, maximum: number) {
+  const admin = createAdminClient();
+  const { data, error } = await admin.rpc("consume_staff_login_rate_limit", {
+    p_key_hash: secureLookupHash(`rate:${key}`),
+    p_max_attempts: maximum,
+    p_window_seconds: 900,
+  });
+  return !error && data === true;
+}
+
+export async function resolveStaffLoginEmail(
+  identifier: string,
+  ipAddress?: string | null,
+) {
   const normalized = identifier.trim().toLowerCase();
   if (normalized.includes("@")) return normalized;
   if (!/^\d{8}$/.test(normalized)) return null;
 
+  const identifierAllowed = await consumeLoginAttempt(`dni:${normalized}`, 6);
+  const ipAllowed = ipAddress
+    ? await consumeLoginAttempt(`ip:${ipAddress}`, 30)
+    : true;
+  if (!identifierAllowed || !ipAllowed) return null;
+
   const admin = createAdminClient();
   const { data, error } = await admin.rpc("resolve_staff_login_email", {
     p_dni: normalized,
+    p_lookup_hash: secureLookupHash(`dni:${normalized}`),
   });
 
   if (error || !data) return null;
@@ -44,9 +73,10 @@ export async function createEmployee(input: CreateEmployeeInput) {
 
   const admin = createAdminClient();
   const normalizedEmail = input.email.trim().toLowerCase();
+  const dniLookupHash = secureLookupHash(`dni:${input.dni}`);
   const { data: existingIdentifier, error: identifierError } = await admin.rpc(
     "resolve_staff_login_email",
-    { p_dni: input.dni },
+    { p_dni: input.dni, p_lookup_hash: dniLookupHash },
   );
 
   if (identifierError) {
@@ -94,6 +124,7 @@ export async function createEmployee(input: CreateEmployeeInput) {
       p_full_name: input.fullName,
       p_work_email: normalizedEmail,
       p_dni: input.dni,
+      p_dni_lookup_hash: dniLookupHash,
       p_dni_last4: input.dni.slice(-4),
       p_role: input.role,
       p_actor_id: viewer.userId,

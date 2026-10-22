@@ -27,9 +27,10 @@ type VisitFormProps = {
   className?: string;
   onSaved?: () => void;
   opportunityId: string;
+  timezone: string;
 };
 
-export function VisitForm({ className, onSaved, opportunityId }: VisitFormProps) {
+export function VisitForm({ className, onSaved, opportunityId, timezone }: VisitFormProps) {
   const router = useRouter();
   const idempotencyKey = useRef<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -50,8 +51,8 @@ export function VisitForm({ className, onSaved, opportunityId }: VisitFormProps)
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            startAt: localDateTimeToIso(form.get("startAt")),
-            endAt: localDateTimeToIso(form.get("endAt")),
+            startAt: localDateTimeToIso(form.get("startAt"), timezone),
+            endAt: localDateTimeToIso(form.get("endAt"), timezone),
             participantsCount: optionalInteger(form.get("participantsCount")),
             mode: form.get("mode"),
             notes: optionalText(form.get("notes")),

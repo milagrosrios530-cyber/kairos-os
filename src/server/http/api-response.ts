@@ -18,6 +18,15 @@ export function apiErrorResponse(
       ? (error.details as ErrorDetails)
       : undefined;
 
+  // Keep logs correlatable without writing request bodies, credentials or PII.
+  console.error(JSON.stringify({
+    event: "api_request_failed",
+    requestId,
+    status,
+    code,
+    errorName: error instanceof Error ? error.name : "UnknownError",
+  }));
+
   return NextResponse.json(
     {
       error: {
@@ -27,7 +36,7 @@ export function apiErrorResponse(
         ...(details ? { details } : {}),
       },
     },
-    { status },
+    { status, headers: { "Cache-Control": "private, no-store" } },
   );
 }
 
@@ -40,7 +49,7 @@ export function invalidJsonResponse(requestId: string) {
         request_id: requestId,
       },
     },
-    { status: 400 },
+    { status: 400, headers: { "Cache-Control": "private, no-store" } },
   );
 }
 
@@ -57,6 +66,6 @@ export function validationErrorResponse(
         details,
       },
     },
-    { status: 400 },
+    { status: 400, headers: { "Cache-Control": "private, no-store" } },
   );
 }

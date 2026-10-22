@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { createBookingHoldSchema } from "@/lib/validation/bookings";
 import { createBookingHold } from "@/server/bookings/mutations";
+import { requirePermission } from "@/server/auth/session";
 import {
   apiErrorResponse,
   invalidJsonResponse,
@@ -11,6 +12,7 @@ import {
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
   try {
+    await requirePermission("bookings:create");
     let body: unknown;
     try {
       body = await request.json();

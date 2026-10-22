@@ -25,7 +25,7 @@ import {
 } from "@/lib/crm/calendar";
 import {
   getBookingCalendarMonth,
-  getBookingFormOptions,
+  getBookingVenueOptions,
 } from "@/server/bookings/queries";
 
 type SearchParams = Promise<{ mes?: string }>;
@@ -35,7 +35,7 @@ export default async function BookingCalendarPage({ searchParams }: { searchPara
   const params = await searchParams;
   const month = normalizeCalendarMonth(params.mes);
   const calendar = await getBookingCalendarMonth(month);
-  const options = calendar.canManage ? await getBookingFormOptions() : null;
+  const venues = calendar.canManage ? await getBookingVenueOptions() : null;
   const grid = calendarMonthGrid(month);
   const today = instantDateKey(new Date().toISOString(), calendar.timezone);
   const byDate = new Map<string, typeof calendar.entries>();
@@ -109,7 +109,7 @@ export default async function BookingCalendarPage({ searchParams }: { searchPara
                   <Link aria-label={`Abrir oportunidad del ${day.dateKey}`} href={`/app/crm/${entry.opportunityId}`}>{content}</Link>
                 ) : content}
                 {available && calendar.canCreate ? (
-                  <Link className="mt-2 hidden rounded-xl border border-dashed border-emerald-300 px-2 py-2 text-center text-[11px] font-medium text-emerald-800 hover:bg-emerald-50 sm:block" href={`/app/reservas/nueva?fecha=${day.dateKey}`}>Registrar</Link>
+                  <Link aria-label={`Registrar evento el ${day.dateKey}`} className="mt-2 hidden rounded-xl border border-dashed border-emerald-300 px-2 py-2 text-center text-[11px] font-medium text-emerald-800 hover:bg-emerald-50 sm:block" href={`/app/reservas/nueva?fecha=${day.dateKey}`}>Registrar</Link>
                 ) : null}
               </div>
             );
@@ -123,7 +123,7 @@ export default async function BookingCalendarPage({ searchParams }: { searchPara
         <div className="flex gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-xs leading-5 text-zinc-900"><LockKeyhole className="mt-0.5 size-4 shrink-0" /><span><strong>No disponible:</strong> bloqueo administrativo u operativo.</span></div>
       </section>
 
-      {calendar.canManage && options ? <BlackoutForm venues={options.venues} /> : null}
+      {calendar.canManage && venues ? <BlackoutForm venues={venues} /> : null}
 
       {calendar.canManage && blackouts.length ? (
         <section className="rounded-2xl border border-black/[0.07] bg-white p-4 shadow-sm">

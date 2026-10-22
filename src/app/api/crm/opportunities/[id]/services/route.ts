@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { opportunityServicesUpdateSchema } from "@/lib/validation/crm";
 import { updateOpportunityServices } from "@/server/crm/mutations";
+import { requirePermission } from "@/server/auth/session";
 import {
   apiErrorResponse,
   invalidJsonResponse,
@@ -16,6 +17,7 @@ export async function PUT(
   const requestId = crypto.randomUUID();
 
   try {
+    await requirePermission("crm:create");
     let body: unknown;
     try {
       body = await request.json();

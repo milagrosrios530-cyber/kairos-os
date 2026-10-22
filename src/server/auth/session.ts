@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import type { AppRole } from "@/lib/auth/roles";
 import { APP_ROLES } from "@/lib/auth/roles";
 import {
@@ -22,52 +24,30 @@ export type Viewer = {
   roles: AppRole[];
 };
 
-type ProfileRow = {
+type ViewerContext = {
   user_id: string;
+  email: string | null;
   organization_id: string;
+  organization_name: string;
+  timezone: string;
   full_name: string;
-  status: "invited" | "active" | "disabled";
-  organizations: { name: string; timezone: string } | null;
+  roles: string[];
 };
 
-export async function getViewer(): Promise<Viewer | null> {
+async function getViewerUncached(): Promise<Viewer | null> {
   const supabase = await createClient();
-  const { data: authData, error: authError } = await supabase.auth.getClaims();
-  const userId = authData?.claims?.sub;
-
-  if (authError || typeof userId !== "string") {
+  const { data, error } = await supabase.rpc("current_viewer_context");
+  if (error?.code === "42501" || error?.code === "PGRST301") {
     return null;
   }
-
-  const { data: profileData, error: profileError } = await supabase
-    .from("profiles")
-    .select(
-      "user_id, organization_id, full_name, status, organizations(name, timezone)",
-    )
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (profileError) {
+  if (error) {
     throw new Error("No se pudo validar el perfil interno.");
   }
-
-  const profile = profileData as ProfileRow | null;
-  if (!profile || profile.status !== "active" || !profile.organizations) {
+  if (!data) {
     throw new AuthorizationError();
   }
-
-  const { data: roleRows, error: roleError } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .eq("organization_id", profile.organization_id);
-
-  if (roleError) {
-    throw new Error("No se pudieron validar los permisos del usuario.");
-  }
-
-  const roles = (roleRows ?? [])
-    .map((row) => row.role)
+  const context = data as ViewerContext;
+  const roles = (context.roles ?? [])
     .filter((role): role is AppRole => APP_ROLES.includes(role as AppRole));
 
   if (roles.length === 0) {
@@ -75,18 +55,20 @@ export async function getViewer(): Promise<Viewer | null> {
   }
 
   return {
-    userId,
-    email:
-      typeof authData?.claims?.email === "string"
-        ? authData.claims.email
-        : null,
-    organizationId: profile.organization_id,
-    organizationName: profile.organizations.name,
-    timezone: profile.organizations.timezone,
-    fullName: profile.full_name,
+    userId: context.user_id,
+    email: context.email,
+    organizationId: context.organization_id,
+    organizationName: context.organization_name,
+    timezone: context.timezone,
+    fullName: context.full_name,
     roles,
   };
 }
+
+// React cache deduplicates the session/profile lookup across layouts and pages
+// participating in the same server render. Route handlers and server actions
+// still execute a fresh authorization check for every request.
+export const getViewer = cache(getViewerUncached);
 
 export async function requireViewer() {
   const viewer = await getViewer();

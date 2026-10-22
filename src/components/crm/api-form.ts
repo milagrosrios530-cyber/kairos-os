@@ -1,3 +1,5 @@
+import { localDateTimeToIsoInZone } from "@/lib/dates/timezone";
+
 export type ApiFieldErrors = Record<string, string[] | undefined>;
 
 export type ApiErrorBody = {
@@ -49,9 +51,11 @@ export function solesToCents(value: FormDataEntryValue | null) {
   return Number.isFinite(parsed) ? Math.round(parsed * 100) : undefined;
 }
 
-export function localDateTimeToIso(value: FormDataEntryValue | null) {
+export function localDateTimeToIso(
+  value: FormDataEntryValue | null,
+  timeZone: string,
+) {
   const normalized = optionalText(value);
   if (!normalized) return undefined;
-  const date = new Date(normalized);
-  return Number.isNaN(date.getTime()) ? normalized : date.toISOString();
+  return localDateTimeToIsoInZone(normalized, timeZone) ?? normalized;
 }

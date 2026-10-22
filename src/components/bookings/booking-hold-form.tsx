@@ -2,7 +2,7 @@
 
 import { CalendarCheck2, LoaderCircle, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { apiErrorMessage, readApiBody, solesToCents, type FormNotice } from "@/components/crm/api-form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -35,6 +35,7 @@ export function BookingHoldForm({
   defaultOpportunityId?: string;
 }) {
   const router = useRouter();
+  const idempotencyKey = useRef<string | null>(null);
   const firstOpportunity = opportunities.find((item) => item.id === defaultOpportunityId)
     ?? opportunities[0];
   const [opportunityId, setOpportunityId] = useState(firstOpportunity?.id ?? "");
@@ -49,6 +50,7 @@ export function BookingHoldForm({
     setPending(true);
     setNotice(null);
     const totalContractCents = solesToCents(formData.get("totalContract"));
+    idempotencyKey.current ??= crypto.randomUUID();
     const payload = {
       opportunityId,
       venueId: String(formData.get("venueId") ?? ""),
@@ -57,7 +59,7 @@ export function BookingHoldForm({
       eventEndTime: String(formData.get("eventEndTime") ?? "") || undefined,
       totalContractCents,
       internalNotes: String(formData.get("internalNotes") ?? "").trim() || undefined,
-      idempotencyKey: crypto.randomUUID(),
+      idempotencyKey: idempotencyKey.current,
     };
     try {
       const response = await fetch("/api/holds", {
@@ -67,16 +69,23 @@ export function BookingHoldForm({
       });
       const body = await readApiBody(response);
       if (!response.ok) {
+        idempotencyKey.current = null;
         setNotice({ kind: "error", text: apiErrorMessage(body, "No se pudo retener la fecha.") });
         return;
       }
       const data = body.data as { booking_id?: string } | undefined;
       if (!data?.booking_id) {
+        idempotencyKey.current = null;
         setNotice({ kind: "error", text: "La reserva se registró sin un identificador navegable." });
         return;
       }
       router.push(`/app/reservas/${data.booking_id}`);
       router.refresh();
+    } catch {
+      setNotice({
+        kind: "error",
+        text: "La conexión se interrumpió. Puedes reintentar sin duplicar la reserva.",
+      });
     } finally {
       setPending(false);
     }

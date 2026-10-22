@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { inviteUserSchema } from "@/lib/validation/auth";
+import { requirePermission } from "@/server/auth/session";
 import { ApplicationError } from "@/server/errors";
 import { inviteEmployee } from "@/server/users/invite-user";
 
@@ -8,6 +9,7 @@ export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
 
   try {
+    await requirePermission("users:invite");
     let body: unknown;
     try {
       body = await request.json();

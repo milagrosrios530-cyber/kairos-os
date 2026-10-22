@@ -39,7 +39,15 @@ export async function loginAction(
     };
   }
 
-  const email = await resolveStaffLoginEmail(parsed.data.identifier);
+  const requestHeaders = await headers();
+  const forwardedFor = requestHeaders.get("x-forwarded-for")
+    ?.split(",")[0]
+    ?.trim()
+    .slice(0, 100);
+  const email = await resolveStaffLoginEmail(
+    parsed.data.identifier,
+    forwardedFor,
+  );
   if (!email) {
     return {
       status: "error",

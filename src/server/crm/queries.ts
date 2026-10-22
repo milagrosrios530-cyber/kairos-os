@@ -285,17 +285,34 @@ export async function getCrmDashboard() {
         .eq("status", "programada")
         .gte("start_at", now)
         .lte("start_at", inSevenDays),
-      listOpportunities({ page: 1 }),
+      supabase
+        .from("opportunities")
+        .select(
+          "id, opportunity_code, customer_id, event_type_id, assigned_to, pipeline_status, desired_date, occasion_detail, guests_total, modality, source, next_action, next_action_at, notes, created_at, updated_at",
+        )
+        .eq("organization_id", viewer.organizationId)
+        .is("archived_at", null)
+        .order("updated_at", { ascending: false })
+        .limit(5),
     ]);
 
   if (
     customers.error ||
     openOpportunities.error ||
     pendingTasks.error ||
-    upcomingVisits.error
+    upcomingVisits.error ||
+    recent.error
   ) {
     throw new Error("No se pudo consultar el resumen comercial.");
   }
+
+  const recentRows = (recent.data ?? []) as OpportunityRow[];
+  const recentMaps = await nameMaps(
+    viewer,
+    unique(recentRows.map((row) => row.customer_id)),
+    unique(recentRows.map((row) => row.event_type_id)),
+    unique(recentRows.map((row) => row.assigned_to)),
+  );
 
   return {
     scope: viewer.roles.some((role) =>
@@ -307,7 +324,23 @@ export async function getCrmDashboard() {
     openOpportunities: openOpportunities.count ?? 0,
     pendingTasks: pendingTasks.count ?? 0,
     upcomingVisits: upcomingVisits.count ?? 0,
-    recentOpportunities: recent.items.slice(0, 5),
+    recentOpportunities: recentRows.map((row) => ({
+      id: row.id,
+      code: row.opportunity_code,
+      customerId: row.customer_id,
+      customerName: recentMaps.customers.get(row.customer_id) ?? "Cliente autorizado",
+      eventType: row.event_type_id
+        ? recentMaps.eventTypes.get(row.event_type_id) ?? "Evento por definir"
+        : "Evento por definir",
+      adviserName: recentMaps.advisers.get(row.assigned_to) ?? viewer.fullName,
+      stage: row.pipeline_status,
+      desiredDate: row.desired_date,
+      guestsTotal: row.guests_total,
+      modality: row.modality,
+      nextAction: row.next_action,
+      nextActionAt: row.next_action_at,
+      updatedAt: row.updated_at,
+    })),
   };
 }
 
@@ -359,6 +392,7 @@ export async function getCrmFormOptions() {
     advisers,
     defaultAdviserId: viewer.userId,
     canAssign,
+    timezone: viewer.timezone,
   };
 }
 
@@ -538,6 +572,7 @@ export async function getOpportunityDetail(opportunityId: string) {
     nextActionAt: opportunity.next_action_at,
     notes: opportunity.notes,
     updatedAt: opportunity.updated_at,
+    timezone: viewer.timezone,
     canCreate: hasPermission(viewer.roles, "bookings:create"),
     customer: customerResult.data
       ? {
@@ -602,15 +637,21 @@ export async function getOpportunityDetail(opportunityId: string) {
   };
 }
 
-export async function listCrmTasks() {
+export async function listCrmTasks(options: { page?: number; history?: boolean } = {}) {
   const viewer = await requirePermission("tasks:view");
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const page = safePage(options.page);
+  const from = (page - 1) * PAGE_SIZE;
+  let query = supabase
     .from("tasks")
-    .select("id, customer_id, opportunity_id, type, title, due_at, priority, status, result, assignee_id")
+    .select("id, customer_id, opportunity_id, type, title, due_at, priority, status, result, assignee_id", { count: "exact" })
     .eq("organization_id", viewer.organizationId)
-    .order("due_at", { ascending: true })
-    .limit(100);
+    .order("due_at", { ascending: !options.history })
+    .range(from, from + PAGE_SIZE - 1);
+  query = options.history
+    ? query.in("status", ["completada", "cancelada"])
+    : query.in("status", ["pendiente", "en_progreso"]);
+  const { data, error, count } = await query;
   if (error) throw new Error("No se pudieron consultar las tareas.");
   const rows = data ?? [];
   const maps = await nameMaps(
@@ -619,7 +660,8 @@ export async function listCrmTasks() {
     [],
     unique(rows.map((row) => row.assignee_id as string)),
   );
-  return rows.map((row) => ({
+  return {
+    items: rows.map((row) => ({
     id: row.id as string,
     opportunityId: row.opportunity_id as string,
     customerName: maps.customers.get(row.customer_id as string) ?? "Cliente autorizado",
@@ -630,18 +672,29 @@ export async function listCrmTasks() {
     status: row.status as string,
     result: row.result as string | null,
     assigneeName: maps.advisers.get(row.assignee_id as string) ?? viewer.fullName,
-  }));
+    })),
+    page,
+    pageSize: PAGE_SIZE,
+    total: count ?? 0,
+    timezone: viewer.timezone,
+  };
 }
 
-export async function listCrmVisits() {
+export async function listCrmVisits(options: { page?: number; history?: boolean } = {}) {
   const viewer = await requirePermission("visits:view");
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const page = safePage(options.page);
+  const from = (page - 1) * PAGE_SIZE;
+  let query = supabase
     .from("visits")
-    .select("id, customer_id, opportunity_id, start_at, end_at, mode, participants_count, status, outcome, staff_id")
+    .select("id, customer_id, opportunity_id, start_at, end_at, mode, participants_count, status, outcome, staff_id", { count: "exact" })
     .eq("organization_id", viewer.organizationId)
-    .order("start_at", { ascending: true })
-    .limit(100);
+    .order("start_at", { ascending: !options.history })
+    .range(from, from + PAGE_SIZE - 1);
+  query = options.history
+    ? query.in("status", ["realizada", "cancelada", "no_asistio"])
+    : query.eq("status", "programada").gte("start_at", new Date().toISOString());
+  const { data, error, count } = await query;
   if (error) throw new Error("No se pudieron consultar las visitas.");
   const rows = data ?? [];
   const maps = await nameMaps(
@@ -650,7 +703,8 @@ export async function listCrmVisits() {
     [],
     unique(rows.map((row) => row.staff_id as string)),
   );
-  return rows.map((row) => ({
+  return {
+    items: rows.map((row) => ({
     id: row.id as string,
     opportunityId: row.opportunity_id as string,
     customerName: maps.customers.get(row.customer_id as string) ?? "Cliente autorizado",
@@ -661,7 +715,12 @@ export async function listCrmVisits() {
     status: row.status as string,
     outcome: row.outcome as string | null,
     staffName: maps.advisers.get(row.staff_id as string) ?? viewer.fullName,
-  }));
+    })),
+    page,
+    pageSize: PAGE_SIZE,
+    total: count ?? 0,
+    timezone: viewer.timezone,
+  };
 }
 
 export async function getCrmCalendarMonth(month: string) {

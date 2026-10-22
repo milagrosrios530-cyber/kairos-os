@@ -66,6 +66,7 @@ type NewLeadFormProps = {
   initialDesiredDate?: string;
   onCreated?: (created: IntakeCreated) => void;
   redirectToDetail?: boolean;
+  timezone: string;
 };
 
 const serviceOptions = [
@@ -109,6 +110,7 @@ export function NewLeadForm({
   initialDesiredDate,
   onCreated,
   redirectToDetail = true,
+  timezone,
 }: NewLeadFormProps) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
@@ -136,15 +138,15 @@ export function NewLeadForm({
           type: String(form.get("taskType") ?? "llamada"),
           title: String(form.get("taskTitle") ?? ""),
           description: optionalText(form.get("taskDescription")),
-          dueAt: localDateTimeToIso(form.get("taskDueAt")),
+          dueAt: localDateTimeToIso(form.get("taskDueAt"), timezone),
           priority: String(form.get("taskPriority") ?? "media"),
         }
       : undefined;
 
     const firstVisit = withVisit
       ? {
-          startAt: localDateTimeToIso(form.get("visitStartAt")),
-          endAt: localDateTimeToIso(form.get("visitEndAt")),
+          startAt: localDateTimeToIso(form.get("visitStartAt"), timezone),
+          endAt: localDateTimeToIso(form.get("visitEndAt"), timezone),
           participantsCount: optionalInteger(form.get("visitParticipantsCount")),
           mode: String(form.get("visitMode") ?? "presencial"),
           notes: optionalText(form.get("visitNotes")),

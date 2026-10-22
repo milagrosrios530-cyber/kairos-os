@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { getViewer, type Viewer } from "@/server/auth/session";
+import { AuthorizationError } from "@/server/errors";
 
 export const dynamic = "force-dynamic";
 
@@ -16,8 +17,12 @@ export default async function InternalLayout({
 
   try {
     viewer = await getViewer();
-  } catch {
-    forbidden = true;
+  } catch (error) {
+    if (error instanceof AuthorizationError) {
+      forbidden = true;
+    } else {
+      throw error;
+    }
   }
 
   if (forbidden) {

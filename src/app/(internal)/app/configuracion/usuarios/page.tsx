@@ -2,12 +2,16 @@ import { ChevronDown, ShieldCheck, UserPlus, Users } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { CreateUserForm } from "@/components/users/create-user-form";
+import { PaginationNav } from "@/components/layout/pagination-nav";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { hasPermission } from "@/lib/auth/permissions";
 import { APP_ROLES, ROLE_LABELS, type AppRole } from "@/lib/auth/roles";
 import { createClient } from "@/lib/supabase/server";
 import { requirePermission, type Viewer } from "@/server/auth/session";
+import { AuthorizationError } from "@/server/errors";
+
+const PAGE_SIZE = 25;
 
 type ProfileRow = {
   user_id: string;
@@ -44,39 +48,59 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-export default async function UsersPage() {
+type SearchParams = Promise<{ pagina?: string }>;
+
+export default async function UsersPage({ searchParams }: { searchParams: SearchParams }) {
+  const params = await searchParams;
+  const parsedPage = Number.parseInt(params.pagina ?? "1", 10);
+  const page = Number.isInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+  const from = (page - 1) * PAGE_SIZE;
   let viewer: Viewer;
 
   try {
     viewer = await requirePermission("users:view");
-  } catch {
-    redirect("/app/sin-permiso");
+  } catch (error) {
+    if (error instanceof AuthorizationError) {
+      redirect("/app/sin-permiso");
+    }
+    throw error;
   }
 
   const supabase = await createClient();
-  const [profilesResult, rolesResult] = await Promise.all([
+  const [profilesResult, activeResult] = await Promise.all([
     supabase
       .from("profiles")
-      .select("user_id, full_name, work_email, dni_last4, status, created_at")
+      .select("user_id, full_name, work_email, dni_last4, status, created_at", { count: "exact" })
       .eq("organization_id", viewer.organizationId)
-      .order("full_name"),
+      .order("full_name")
+      .range(from, from + PAGE_SIZE - 1),
     supabase
-      .from("user_roles")
-      .select("user_id, role")
-      .eq("organization_id", viewer.organizationId),
+      .from("profiles")
+      .select("user_id", { count: "exact", head: true })
+      .eq("organization_id", viewer.organizationId)
+      .eq("status", "active"),
   ]);
 
-  if (profilesResult.error || rolesResult.error) {
+  const profileRows = (profilesResult.data ?? []) as ProfileRow[];
+  const profileIds = profileRows.map((profile) => profile.user_id);
+  const rolesResult = profileIds.length
+    ? await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .eq("organization_id", viewer.organizationId)
+        .in("user_id", profileIds)
+    : { data: [], error: null };
+
+  if (profilesResult.error || activeResult.error || rolesResult.error) {
     throw new Error("No se pudo consultar el equipo de la organización.");
   }
 
-  const profileRows = (profilesResult.data ?? []) as ProfileRow[];
   const roleRows = (rolesResult.data ?? []) as RoleRow[];
   const canCreate = hasPermission(viewer.roles, "users:create");
   const allowedRoles = viewer.roles.includes("SUPERADMIN")
     ? APP_ROLES
     : (["COMERCIAL", "COORDINADOR", "FINANZAS", "CONSULTA"] as const);
-  const activeCount = profileRows.filter((profile) => profile.status === "active").length;
+  const activeCount = activeResult.count ?? 0;
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -196,6 +220,7 @@ export default async function UsersPage() {
           )}
         </CardContent>
       </Card>
+      <PaginationNav label="usuarios" page={page} pageSize={PAGE_SIZE} pathname="/app/configuracion/usuarios" total={profilesResult.count ?? 0} />
     </div>
   );
 }

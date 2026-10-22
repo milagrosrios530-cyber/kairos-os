@@ -2,7 +2,7 @@
 
 import { LoaderCircle, Unlock } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { apiErrorMessage, readApiBody } from "@/components/crm/api-form";
 import { Button } from "@/components/ui/button";
@@ -10,28 +10,31 @@ import { Input } from "@/components/ui/input";
 
 export function BlackoutReleaseForm({ allocationId }: { allocationId: string }) {
   const router = useRouter();
+  const idempotencyKey = useRef<string | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   async function submit(formData: FormData) {
     setPending(true);
     setError(null);
+    idempotencyKey.current ??= crypto.randomUUID();
     try {
       const response = await fetch(`/api/calendar/blackouts/${allocationId}/release`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           reason: String(formData.get("reason") ?? ""),
-          idempotencyKey: crypto.randomUUID(),
+          idempotencyKey: idempotencyKey.current,
         }),
       });
       const body = await readApiBody(response);
       if (!response.ok) {
+        idempotencyKey.current = null;
         setError(apiErrorMessage(body));
         return;
       }
       router.refresh();
     } catch {
-      setError("No se pudo conectar con el servidor.");
+      setError("La conexión se interrumpió. Puedes reintentar sin duplicar la liberación.");
     } finally {
       setPending(false);
     }
