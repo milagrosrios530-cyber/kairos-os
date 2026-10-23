@@ -71,7 +71,7 @@ export default async function AgendaPage({ searchParams }: { searchParams: Searc
             Agenda comercial
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
-            Reúne fechas solicitadas, visitas y tareas del mes. Las solicitudes son tentativas y no representan disponibilidad ni una reserva.
+            Reúne fechas solicitadas, visitas y tareas del mes. Las solicitudes generan un hold inicial de 24 horas, pero no equivalen a una reserva confirmada.
           </p>
         </div>
         {agenda.canCreate ? (
@@ -190,7 +190,7 @@ export default async function AgendaPage({ searchParams }: { searchParams: Searc
 
       <div className="flex flex-wrap gap-x-4 gap-y-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-900">
         <span><strong>Importante:</strong> esta es una agenda comercial.</span>
-        <span>Fecha solicitada ≠ reserva confirmada.</span>
+        <span>Fecha solicitada = hold inicial de 24 h; no reserva confirmada.</span>
         <span>Las visitas y tareas tampoco bloquean el salón.</span>
       </div>
     </div>

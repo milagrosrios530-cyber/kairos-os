@@ -28,7 +28,7 @@ export default async function NewCrmLeadPage({ searchParams }: { searchParams: S
         </p>
         <div className="mt-5 flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-900">
           <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-          <p>La fecha es tentativa y el monto ofrecido es una propuesta referencial. Ninguno confirma disponibilidad, tarifa o reserva.</p>
+          <p>La fecha es tentativa y, al guardarla, crea un hold automático de 24 horas si está disponible. El monto ofrecido sigue siendo referencial y no confirma tarifa ni reserva.</p>
         </div>
       </section>
 

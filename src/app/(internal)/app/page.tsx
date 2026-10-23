@@ -175,7 +175,7 @@ export default async function DashboardPage() {
           <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
             <p>Todos los números de esta pantalla provienen de registros persistentes y respetan tu alcance de permisos.</p>
             <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-900">
-              La fecha mostrada en CRM es solicitada y tentativa. Todavía no bloquea el salón ni confirma una reserva.
+              Una fecha solicitada crea un hold automático de 24 horas. Si vence sin una reserva confirmada, vuelve a quedar disponible.
             </div>
             <p className="text-xs">
               Los importes propuestos tampoco se contabilizan como ventas, ingresos o utilidad.

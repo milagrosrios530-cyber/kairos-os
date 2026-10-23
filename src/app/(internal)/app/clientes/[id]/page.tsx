@@ -41,7 +41,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
           {customer.opportunities.length ? customer.opportunities.map((opportunity) => (
             <Link className="rounded-[22px] border border-black/[0.06] bg-white p-5 shadow-sm" href={`/app/crm/${opportunity.id}`} key={opportunity.id}>
               <div className="flex items-start justify-between gap-3"><div><p className="font-semibold">{opportunity.eventType}</p><p className="mt-1 text-xs text-muted-foreground">{opportunity.code}</p></div><Badge variant="outline">{PIPELINE_STATUS_LABELS[opportunity.stage as PipelineStatus] ?? opportunity.stage}</Badge></div>
-              <p className="mt-4 flex items-center gap-2 text-sm"><CalendarDays aria-hidden="true" className="size-4 text-[#8b672f]" />{date(opportunity.desiredDate)} · tentativa</p>
+              <p className="mt-4 flex items-center gap-2 text-sm"><CalendarDays aria-hidden="true" className="size-4 text-[#8b672f]" />{date(opportunity.desiredDate)} · hold inicial de 24 h</p>
               <p className="mt-2 text-xs text-muted-foreground">{opportunity.guestsTotal ?? "—"} invitados · {opportunity.adviserName}</p>
             </Link>
           )) : <div className="rounded-[22px] border border-dashed border-black/10 bg-white p-8 text-sm text-muted-foreground">No hay oportunidades asociadas.</div>}

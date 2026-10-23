@@ -29,7 +29,7 @@ export default async function CrmPage({ searchParams }: { searchParams: SearchPa
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8b672f]">Comercial</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] sm:text-[40px]">CRM y prospectos</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Organiza oportunidades, seguimientos y visitas. Las fechas aquí son solicitudes tentativas y no ocupan el salón.
+            Organiza oportunidades, seguimientos y visitas. Una fecha solicitada retiene el salón durante 24 horas; después requiere una reserva confirmada.
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
