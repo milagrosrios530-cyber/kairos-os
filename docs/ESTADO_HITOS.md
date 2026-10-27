@@ -107,16 +107,22 @@ Implementado el 21 de octubre de 2026:
 
 Supabase remoto: cuatro migraciones de Hito 3 aplicadas (`booking_engine_hito3`, `booking_engine_indexes`, `booking_management_actions` y `booking_deposit_rejection`). No se cargaron fixtures ni reservas demo.
 
+## Hito 4 — avance autorizado: calendario público
+
+Implementado el primer corte del portal público en `/disponibilidad`: acceso sin cuenta, navegación limitada al mes actual y once meses posteriores, y exposición exclusiva de fechas confirmadas con su horario. La vista usa el término **“Reservado”** y omite clientes, teléfonos, tipo de evento, códigos, importes, abonos y asesores. El calendario interno ofrece acciones para abrir y compartir el enlace público.
+
+La lectura pública se ejecuta únicamente en servidor con selección explícita de cuatro columnas de `bookings`, filtro `status = confirmed`, clave administrativa no expuesta, rate limit persistente por huella HMAC, `no-store`, `noindex` y `Referrer-Policy: no-referrer`. No se habilitaron todavía el formulario público de prospectos ni los enlaces privados de clientes; siguen pendientes del resto de Hito 4.
+
 Evidencia de puerta:
 
-- `pnpm lint`, `pnpm typecheck`, `pnpm test` (68/68) y `pnpm build` pasan;
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` (78/78) y `pnpm build` pasan;
 - pgTAP remoto de flujo: 20/20 controles, incluidos el hold automático al crear el prospecto, el rechazo `23P01` de una fecha ya ocupada y el rollback que conserva el hold original;
 - pgTAP remoto de seguridad: 24/24 controles de RLS, privilegios, acceso anónimo, funciones privadas y RPCs autorizadas;
 - smoke autenticado posterior al despliegue: se corrigieron los permisos `EXECUTE` de los dos helpers booleanos usados por las políticas RLS, la consulta bajo rol `authenticated` devolvió acceso válido y el calendario/listado/formulario cargaron desde la URL pública;
 - prueba funcional de pagos: S/15,500 genera adelanto S/500, saldo base S/15,000, vencimiento intermedio S/7,500 y pago final S/7,500;
 - las pruebas de base se ejecutaron dentro de transacciones con `ROLLBACK`; la comprobación posterior confirmó 0 clientes demo, 0 reservas de prueba y 0 asignaciones bloqueantes residuales.
 
-La oportunidad real de Ivon Artica Cuadrado continúa intacta. La asignación `074f6824-d822-4e69-a213-3d85c3a49210` representa su fecha del 12 de diciembre de 2026 como hold automático; la comprobación remota confirmó fecha bloqueada y ausencia de una reserva o pago falsamente confirmados.
+La oportunidad real de Ivon Artica Cuadrado continúa intacta y enlazada a `KAI-RES-2026-000001`: 12 de diciembre de 2026, de 12:00 a 22:00, con S/500 verificados. La reserva quedó en estado `confirmed`, la fecha está bloqueada y el CRM avanzó a `Ganado` conservando su historial.
 
 Avisos abiertos, no bloqueantes para staging:
 
@@ -126,6 +132,6 @@ Avisos abiertos, no bloqueantes para staging:
 - la generación, envío, firma y almacenamiento privado del contrato pertenecen al Hito 5; Hito 3 registra la confirmación de fecha y muestra ese paso como pendiente;
 - la protección de contraseñas filtradas de Supabase Auth continúa desactivada.
 
-## Hitos 4 a 7
+## Resto de Hito 4 e Hitos 5 a 7
 
-No iniciados. Requieren el resumen comprobable de este hito y aprobación explícita antes de avanzar.
+No iniciados. El formulario público de consultas y los enlaces privados de clientes requieren el resumen comprobable de este corte y aprobación explícita antes de avanzar.

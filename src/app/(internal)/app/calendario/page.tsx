@@ -3,6 +3,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
+  ExternalLink,
   LockKeyhole,
   Plus,
   ShieldCheck,
@@ -11,6 +12,7 @@ import Link from "next/link";
 
 import { BlackoutForm } from "@/components/bookings/blackout-form";
 import { BlackoutReleaseForm } from "@/components/bookings/blackout-release-form";
+import { ShareAvailabilityButton } from "@/components/bookings/share-availability-button";
 import { Button } from "@/components/ui/button";
 import {
   BOOKING_STATUS_LABELS,
@@ -60,11 +62,17 @@ export default async function BookingCalendarPage({ searchParams }: { searchPara
             Una sola celebración por fecha. Los estados de esta vista provienen de reservas y holds reales protegidos por PostgreSQL.
           </p>
         </div>
-        {calendar.canCreate ? (
-          <Button className="h-11 rounded-xl px-4" render={<Link href="/app/reservas/nueva" />}>
-            <Plus aria-hidden="true" /> Retener una fecha
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Button className="h-11 rounded-xl px-4" render={<Link href="/disponibilidad" target="_blank" />} variant="outline">
+            <ExternalLink aria-hidden="true" /> Abrir vista pública
           </Button>
-        ) : null}
+          <ShareAvailabilityButton />
+          {calendar.canCreate ? (
+            <Button className="h-11 rounded-xl px-4" render={<Link href="/app/reservas/nueva" />}>
+              <Plus aria-hidden="true" /> Retener una fecha
+            </Button>
+          ) : null}
+        </div>
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
