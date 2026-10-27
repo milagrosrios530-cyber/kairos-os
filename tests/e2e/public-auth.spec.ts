@@ -14,11 +14,18 @@ test("private pages redirect an anonymous visitor", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Acceso del equipo" })).toBeVisible();
 });
 
-test("public availability is accessible without login and does not expose customer data", async ({ page }) => {
+test("public availability is accessible without login and does not expose customer data", async ({ context, page }) => {
   test.skip(
     !process.env.E2E_BASE_URL,
     "La lectura pública requiere los secretos del backend desplegado.",
   );
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "share", {
+      configurable: true,
+      value: undefined,
+    });
+  });
   await page.goto("/disponibilidad?mes=2026-12");
   await expect(page.getByRole("heading", { name: "Fechas reservadas" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Diciembre de 2026" })).toBeVisible();
@@ -26,6 +33,11 @@ test("public availability is accessible without login and does not expose custom
   await expect(page.getByText("12:00–22:00", { exact: true })).toBeVisible();
   await expect(page.getByText("Ivon Artica Cuadrado")).toHaveCount(0);
   await expect(page.getByText("S/ 5,500")).toHaveCount(0);
+  await page.getByRole("button", { name: "Compartir calendario" }).click();
+  await expect(page.getByRole("button", { name: "Enlace copiado" })).toBeVisible();
+  const sharedUrl = new URL(await page.evaluate(() => navigator.clipboard.readText()));
+  expect(sharedUrl.pathname).toBe("/disponibilidad");
+  expect(sharedUrl.searchParams.get("mes")).toBe("2026-12");
 });
 
 test("route authorization runs before payload validation", async ({ request }) => {
