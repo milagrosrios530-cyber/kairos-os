@@ -5,15 +5,22 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
-export function ShareAvailabilityButton({ compact = false }: { compact?: boolean }) {
+export function ShareAvailabilityButton({
+  compact = false,
+  month,
+}: {
+  compact?: boolean;
+  month?: string;
+}) {
   const [copied, setCopied] = useState(false);
 
   async function share() {
-    const url = new URL("/disponibilidad", window.location.origin).toString();
+    const url = new URL("/disponibilidad", window.location.origin);
+    if (month) url.searchParams.set("mes", month);
     const shareData = {
       title: "Fechas reservadas · Kairós",
       text: "Consulta las fechas y horarios reservados del Salón de Recepciones Kairós.",
-      url,
+      url: url.toString(),
     };
 
     try {
@@ -21,13 +28,13 @@ export function ShareAvailabilityButton({ compact = false }: { compact?: boolean
         await navigator.share(shareData);
         return;
       }
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(url.toString());
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2500);
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       try {
-        await navigator.clipboard.writeText(url);
+        await navigator.clipboard.writeText(url.toString());
         setCopied(true);
         window.setTimeout(() => setCopied(false), 2500);
       } catch {

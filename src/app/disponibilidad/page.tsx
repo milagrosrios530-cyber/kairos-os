@@ -82,7 +82,7 @@ export default async function PublicAvailabilityPage({ searchParams }: { searchP
                 <p className="mt-1 text-xs text-muted-foreground sm:text-sm">{availability.organizationName}</p>
               </div>
             </div>
-            <ShareAvailabilityButton />
+            <ShareAvailabilityButton month={availability.month} />
           </div>
           <p className="mt-5 max-w-3xl text-sm leading-6 text-muted-foreground">
             Consulta qué días tienen una reserva confirmada y su horario. Por privacidad, esta vista no muestra clientes, importes, asesores ni detalles del evento.

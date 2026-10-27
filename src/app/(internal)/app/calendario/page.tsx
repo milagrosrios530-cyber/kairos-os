@@ -63,10 +63,10 @@ export default async function BookingCalendarPage({ searchParams }: { searchPara
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Button className="h-11 rounded-xl px-4" render={<Link href="/disponibilidad" target="_blank" />} variant="outline">
+          <Button className="h-11 rounded-xl px-4" render={<Link href={{ pathname: "/disponibilidad", query: { mes: month } }} target="_blank" />} variant="outline">
             <ExternalLink aria-hidden="true" /> Abrir vista pública
           </Button>
-          <ShareAvailabilityButton />
+          <ShareAvailabilityButton month={month} />
           {calendar.canCreate ? (
             <Button className="h-11 rounded-xl px-4" render={<Link href="/app/reservas/nueva" />}>
               <Plus aria-hidden="true" /> Retener una fecha
