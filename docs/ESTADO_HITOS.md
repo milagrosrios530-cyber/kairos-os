@@ -111,7 +111,7 @@ Supabase remoto: cuatro migraciones de Hito 3 aplicadas (`booking_engine_hito3`,
 
 Implementado el primer corte del portal público en `/disponibilidad`: acceso sin cuenta, navegación limitada al mes actual y once meses posteriores, y exposición exclusiva de fechas confirmadas con su horario. La vista usa el término **“Reservado”** y omite clientes, teléfonos, tipo de evento, códigos, importes, abonos y asesores. El calendario interno ofrece acciones para abrir y compartir el enlace público.
 
-La lectura pública se ejecuta únicamente en servidor con selección explícita de cuatro columnas de `bookings`, filtro `status = confirmed`, clave administrativa no expuesta, rate limit persistente por huella HMAC, `no-store`, `noindex` y `Referrer-Policy: no-referrer`. No se habilitaron todavía el formulario público de prospectos ni los enlaces privados de clientes; siguen pendientes del resto de Hito 4.
+La lectura pública se ejecuta únicamente en servidor con selección explícita de cuatro columnas de `bookings`, filtro `status = confirmed` y clave administrativa no expuesta. El API conserva rate limit persistente por huella HMAC; la respuesta del sitio mantiene `no-store`, `noindex` y `Referrer-Policy: no-referrer`. Para acelerar la navegación, solo el conjunto saneado de fechas y horarios se reutiliza durante 30 segundos en servidor y se invalida inmediatamente al confirmar, cancelar o reprogramar una reserva. Los meses adyacentes se precargan y la etiqueta móvil de **“Reservado”** queda contenida dentro de su día. No se habilitaron todavía el formulario público de prospectos ni los enlaces privados de clientes; siguen pendientes del resto de Hito 4.
 
 Evidencia de puerta:
 

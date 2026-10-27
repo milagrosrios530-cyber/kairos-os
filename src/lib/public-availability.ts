@@ -5,6 +5,7 @@ import {
 } from "@/lib/crm/calendar";
 
 export const PUBLIC_CALENDAR_MONTHS = 12;
+export const PUBLIC_AVAILABILITY_CACHE_TAG = "public-availability";
 
 export type PublicBookingRow = {
   event_date: string;

@@ -30,9 +30,21 @@ test("public availability is accessible without login and does not expose custom
   await expect(page.getByRole("heading", { name: "Fechas reservadas" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Diciembre de 2026" })).toBeVisible();
   await expect(page.getByText("Reservado", { exact: true })).toBeVisible();
-  await expect(page.getByText("12:00–22:00", { exact: true })).toBeVisible();
+  await expect(page.locator("span:visible").filter({ hasText: "12:00" }).first()).toBeVisible();
+  await expect(page.locator("span:visible").filter({ hasText: "22:00" }).first()).toBeVisible();
   await expect(page.getByText("Ivon Artica Cuadrado")).toHaveCount(0);
   await expect(page.getByText("S/ 5,500")).toHaveCount(0);
+  const reservedDay = page.locator('[data-calendar-day="2026-12-12"]');
+  const reservedCard = reservedDay.locator('[data-reservation-status="reserved"]');
+  const [dayBox, cardBox] = await Promise.all([
+    reservedDay.boundingBox(),
+    reservedCard.boundingBox(),
+  ]);
+  expect(dayBox).not.toBeNull();
+  expect(cardBox).not.toBeNull();
+  expect((cardBox?.x ?? 0) + (cardBox?.width ?? 0)).toBeLessThanOrEqual(
+    (dayBox?.x ?? 0) + (dayBox?.width ?? 0) + 1,
+  );
   await page.getByRole("button", { name: "Compartir calendario" }).click();
   await expect(page.getByRole("button", { name: "Enlace copiado" })).toBeVisible();
   const sharedUrl = new URL(await page.evaluate(() => navigator.clipboard.readText()));

@@ -2,7 +2,6 @@ import { CalendarCheck2, ChevronLeft, ChevronRight, Clock3, ShieldCheck } from "
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { headers } from "next/headers";
 
 import { ShareAvailabilityButton } from "@/components/bookings/share-availability-button";
 import { Button } from "@/components/ui/button";
@@ -14,8 +13,7 @@ import {
 import { publicCalendarNavigation } from "@/lib/public-availability";
 import { ApplicationError } from "@/server/errors";
 import {
-  getPublicAvailabilityMonth,
-  publicRequestKey,
+  getPublicAvailabilityMonthView,
 } from "@/server/public-availability";
 
 export const metadata: Metadata = {
@@ -45,14 +43,10 @@ function PublicAvailabilityError({ rateLimited }: { rateLimited: boolean }) {
 
 export default async function PublicAvailabilityPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
-  const requestHeaders = await headers();
   let availability;
 
   try {
-    availability = await getPublicAvailabilityMonth(
-      params.mes,
-      publicRequestKey(requestHeaders),
-    );
+    availability = await getPublicAvailabilityMonthView(params.mes);
   } catch (error) {
     return (
       <PublicAvailabilityError
@@ -92,14 +86,14 @@ export default async function PublicAvailabilityPage({ searchParams }: { searchP
         <section className="overflow-hidden rounded-[28px] border border-black/[0.055] bg-white shadow-[0_16px_65px_rgba(0,0,0,0.055)]">
           <header className="grid grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-3 border-b border-black/[0.055] px-3 py-4 sm:px-6 sm:py-5">
             {navigation.canGoPrevious ? (
-              <Button aria-label="Mes anterior" render={<Link href={{ pathname: "/disponibilidad", query: { mes: navigation.previousMonth } }} prefetch={false} />} size="icon" variant="outline"><ChevronLeft /></Button>
+              <Button aria-label="Mes anterior" render={<Link href={{ pathname: "/disponibilidad", query: { mes: navigation.previousMonth } }} />} size="icon" variant="outline"><ChevronLeft /></Button>
             ) : <span aria-hidden="true" />}
             <div className="text-center">
               <h2 className="text-lg font-semibold sm:text-xl">{calendarMonthLabel(availability.month)}</h2>
               <p className="mt-1 text-[11px] text-muted-foreground">Zona horaria: {availability.timezone}</p>
             </div>
             {navigation.canGoNext ? (
-              <Button aria-label="Mes siguiente" render={<Link href={{ pathname: "/disponibilidad", query: { mes: navigation.nextMonth } }} prefetch={false} />} size="icon" variant="outline"><ChevronRight /></Button>
+              <Button aria-label="Mes siguiente" render={<Link href={{ pathname: "/disponibilidad", query: { mes: navigation.nextMonth } }} />} size="icon" variant="outline"><ChevronRight /></Button>
             ) : <span aria-hidden="true" />}
           </header>
 
@@ -117,12 +111,16 @@ export default async function PublicAvailabilityPage({ searchParams }: { searchP
                   : `Desde ${entry.startTime}`
                 : null;
               return (
-                <div className={`min-h-20 border-b border-r border-black/[0.045] p-1.5 sm:min-h-32 sm:p-2.5 ${isPast ? "bg-black/[0.012]" : ""}`} key={day.dateKey}>
+                <div className={`min-h-20 min-w-0 overflow-hidden border-b border-r border-black/[0.045] p-1 sm:min-h-32 sm:p-2.5 ${isPast ? "bg-black/[0.012]" : ""}`} data-calendar-day={day.dateKey} key={day.dateKey}>
                   <span className={`flex size-6 items-center justify-center rounded-full text-[11px] font-semibold sm:size-7 sm:text-xs ${day.dateKey === today ? "bg-[#1d1d1f] text-white" : isPast ? "text-muted-foreground" : ""}`}>{day.day}</span>
                   {entry ? (
-                    <div className="mt-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-1.5 py-2 text-emerald-950 sm:mt-2 sm:px-2.5">
-                      <span className="block text-[9px] font-bold uppercase tracking-[0.04em] sm:text-[11px]">Reservado</span>
-                      <span className="mt-1 flex items-center gap-1 text-[9px] font-medium sm:text-[11px]"><Clock3 className="size-3" /> {time}</span>
+                    <div className="mt-1.5 max-w-full overflow-hidden rounded-lg border border-emerald-200 bg-emerald-50 px-1 py-1.5 text-emerald-950 sm:mt-2 sm:rounded-xl sm:px-2.5 sm:py-2" data-reservation-status="reserved">
+                      <span className="block whitespace-nowrap text-[7px] font-bold leading-none tracking-[-0.02em] sm:text-[11px] sm:uppercase sm:tracking-[0.04em]">Reservado</span>
+                      <span className="mt-1 block text-[8px] font-semibold leading-3 tabular-nums sm:hidden">
+                        {entry.startTime}
+                        {entry.endTime ? <><br />{entry.endTime}</> : null}
+                      </span>
+                      <span className="mt-1 hidden items-center gap-1 text-[11px] font-medium sm:flex"><Clock3 className="size-3" /> {time}</span>
                     </div>
                   ) : null}
                 </div>

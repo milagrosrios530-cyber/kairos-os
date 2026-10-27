@@ -1,5 +1,8 @@
 import "server-only";
 
+import { revalidateTag } from "next/cache";
+
+import { PUBLIC_AVAILABILITY_CACHE_TAG } from "@/lib/public-availability";
 import { createClient } from "@/lib/supabase/server";
 import type {
   BookingReason,
@@ -53,6 +56,10 @@ function ensureNotExpired(data: unknown) {
   }
 }
 
+function invalidatePublicAvailability() {
+  revalidateTag(PUBLIC_AVAILABILITY_CACHE_TAG, { expire: 0 });
+}
+
 export async function createBookingHold(input: CreateBookingHold) {
   await requirePermission("bookings:create");
   const supabase = await createClient();
@@ -97,6 +104,7 @@ export async function confirmBooking(bookingId: string, input: ConfirmBooking) {
   });
   if (error) mapBookingError(error, "No se pudo verificar el abono y confirmar la reserva.");
   ensureNotExpired(data);
+  invalidatePublicAvailability();
   return data;
 }
 
@@ -151,6 +159,7 @@ export async function cancelConfirmedBooking(bookingId: string, input: BookingRe
     p_idempotency_key: input.idempotencyKey,
   });
   if (error) mapBookingError(error, "No se pudo cancelar la reserva.");
+  invalidatePublicAvailability();
   return data;
 }
 
@@ -167,6 +176,7 @@ export async function rescheduleBooking(bookingId: string, input: RescheduleBook
   });
   if (error) mapBookingError(error, "No se pudo reprogramar la reserva.");
   ensureNotExpired(data);
+  invalidatePublicAvailability();
   return data;
 }
 

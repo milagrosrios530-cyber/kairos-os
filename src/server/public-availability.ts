@@ -1,10 +1,12 @@
 import "server-only";
 
 import { createHmac } from "node:crypto";
+import { unstable_cache } from "next/cache";
 
 import {
   currentCalendarMonth,
   normalizePublicCalendarMonth,
+  PUBLIC_AVAILABILITY_CACHE_TAG,
   sanitizePublicAvailability,
   type PublicBookingRow,
 } from "@/lib/public-availability";
@@ -17,6 +19,12 @@ const PUBLIC_REQUEST_LIMIT = 120;
 const PUBLIC_REQUEST_WINDOW_SECONDS = 15 * 60;
 
 type HeaderReader = Pick<Headers, "get">;
+
+type PublicOrganization = {
+  id: string;
+  name: string;
+  timezone: string;
+};
 
 function secureRequestHash(value: string) {
   return createHmac("sha256", getStaffLoginSecret())
@@ -58,53 +66,80 @@ async function consumePublicRequest(key: string) {
   }
 }
 
-export async function getPublicAvailabilityMonth(
+const getPublicOrganization = unstable_cache(
+  async (): Promise<PublicOrganization> => {
+    const admin = createAdminClient();
+    const { data: organizations, error } = await admin
+      .from("organizations")
+      .select("id, name, timezone")
+      .order("created_at")
+      .limit(2);
+
+    if (error || organizations?.length !== 1) {
+      throw new ApplicationError(
+        "PUBLIC_AVAILABILITY_ORGANIZATION_UNAVAILABLE",
+        503,
+        "El calendario público no está configurado.",
+      );
+    }
+
+    return organizations[0] as PublicOrganization;
+  },
+  ["public-availability-organization"],
+  { revalidate: 60 * 60 },
+);
+
+const getPublicBookingRows = unstable_cache(
+  async (organizationId: string, month: string, nextMonth: string) => {
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from("bookings")
+      .select("event_date, event_start_time, event_end_time, status")
+      .eq("organization_id", organizationId)
+      .eq("status", "confirmed")
+      .gte("event_date", `${month}-01`)
+      .lt("event_date", `${nextMonth}-01`)
+      .order("event_date");
+
+    if (error) {
+      throw new ApplicationError(
+        "PUBLIC_AVAILABILITY_QUERY_FAILED",
+        503,
+        "No se pudo consultar la disponibilidad pública.",
+      );
+    }
+
+    return sanitizePublicAvailability((data ?? []) as PublicBookingRow[]);
+  },
+  ["public-availability-month"],
+  { revalidate: 30, tags: [PUBLIC_AVAILABILITY_CACHE_TAG] },
+);
+
+export async function getPublicAvailabilityMonthView(
   requestedMonth: string | null | undefined,
-  requestKey: string,
 ) {
-  await consumePublicRequest(requestKey);
-
-  const admin = createAdminClient();
-  const { data: organizations, error: organizationError } = await admin
-    .from("organizations")
-    .select("id, name, timezone")
-    .order("created_at")
-    .limit(2);
-
-  if (organizationError || organizations?.length !== 1) {
-    throw new ApplicationError(
-      "PUBLIC_AVAILABILITY_ORGANIZATION_UNAVAILABLE",
-      503,
-      "El calendario público no está configurado.",
-    );
-  }
-
-  const organization = organizations[0];
+  const organization = await getPublicOrganization();
   const currentMonth = currentCalendarMonth(new Date(), organization.timezone);
   const month = normalizePublicCalendarMonth(requestedMonth, currentMonth);
   const nextMonth = shiftCalendarMonth(month, 1);
-  const { data, error } = await admin
-    .from("bookings")
-    .select("event_date, event_start_time, event_end_time, status")
-    .eq("organization_id", organization.id)
-    .eq("status", "confirmed")
-    .gte("event_date", `${month}-01`)
-    .lt("event_date", `${nextMonth}-01`)
-    .order("event_date");
-
-  if (error) {
-    throw new ApplicationError(
-      "PUBLIC_AVAILABILITY_QUERY_FAILED",
-      503,
-      "No se pudo consultar la disponibilidad pública.",
-    );
-  }
+  const entries = await getPublicBookingRows(organization.id, month, nextMonth);
 
   return {
     organizationName: organization.name,
     timezone: organization.timezone,
     currentMonth,
     month,
-    entries: sanitizePublicAvailability((data ?? []) as PublicBookingRow[]),
+    entries,
   };
+}
+
+export async function getPublicAvailabilityMonth(
+  requestedMonth: string | null | undefined,
+  requestKey: string,
+) {
+  const [, availability] = await Promise.all([
+    consumePublicRequest(requestKey),
+    getPublicAvailabilityMonthView(requestedMonth),
+  ]);
+  return availability;
 }
